@@ -1,0 +1,263 @@
+/*
+ * Copyright 2026 youngmonkeys.org
+ *
+ * Licensed under the ezyplatform, Version 1.0.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://youngmonkeys.org/licenses/ezyplatform-1.0.0.txt
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+package org.youngmonkeys.ezyvector.admin.service;
+
+import com.tvd12.ezyfox.util.EzyMapBuilder;
+import com.tvd12.ezyhttp.server.core.annotation.Service;
+import org.youngmonkeys.ezyplatform.admin.service.AdminSettingService;
+import org.youngmonkeys.ezyvector.model.RagMySqlConnectionPropertiesModel;
+import org.youngmonkeys.ezyvector.model.RagQdrantConnectionPropertiesModel;
+import org.youngmonkeys.ezyvector.service.ezyvectorSettingService;
+
+import static org.youngmonkeys.ezyplatform.constant.CommonConstants.PATTERN_HIDDEN_PASSWORD;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.DEFAULT_MYSQL_COLLECTION_NAME;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.DEFAULT_MYSQL_VECTOR_SIZE;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_DATA_CHUNKER_NAME;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_DATA_RETRIEVER_NAME;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_EMBEDDING_SERVICE_NAME;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_KNOWLEDGE_DATA_BUILDER_NAME;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_MYSQL_COLLECTION_NAME;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_MYSQL_CONNECTION_ACCESS_TOKEN;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_MYSQL_CONNECTION_PROPERTIES;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_MYSQL_VECTOR_SIZE;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_OPENAI_API_KEY;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_OPENAI_EMBEDDING_MODEL;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_QDRANT_CONNECTION_API_KEY;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_QDRANT_CONNECTION_PROPERTIES;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_QDRANT_VECTOR_SIZE;
+import static org.youngmonkeys.ezyvector.constant.ezyvectorConstants.SETTING_NAME_VECTOR_DATABASE_SERVICE_NAME;
+
+@Service
+public class AdminezyvectorSettingService extends ezyvectorSettingService {
+
+    private final AdminSettingService settingService;
+
+    public AdminezyvectorSettingService(
+        AdminSettingService settingService
+    ) {
+        super(settingService);
+        this.settingService = settingService;
+    }
+
+    public void setOpenAiApiKey(String apiKey) {
+        if (!apiKey.matches(PATTERN_HIDDEN_PASSWORD)) {
+            settingService.setPasswordValue(
+                SETTING_NAME_OPENAI_API_KEY,
+                apiKey
+            );
+        }
+    }
+
+    public void setOpenAiEmbeddingModel(String model) {
+        settingService.setTextValue(
+            SETTING_NAME_OPENAI_EMBEDDING_MODEL,
+            model
+        );
+        settingService.cacheValueIfNotNull(
+            SETTING_NAME_OPENAI_EMBEDDING_MODEL,
+            model
+        );
+    }
+
+    public void setKnowledgeDataBuilderName(String name) {
+        setTextValue(
+            SETTING_NAME_KNOWLEDGE_DATA_BUILDER_NAME,
+            name
+        );
+    }
+
+    public void setDataChunkerName(String name) {
+        setTextValue(
+            SETTING_NAME_DATA_CHUNKER_NAME,
+            name
+        );
+    }
+
+    public void setDataRetrieverName(String name) {
+        setTextValue(
+            SETTING_NAME_DATA_RETRIEVER_NAME,
+            name
+        );
+    }
+
+    public void setEmbeddingServiceName(String name) {
+        setTextValue(
+            SETTING_NAME_EMBEDDING_SERVICE_NAME,
+            name
+        );
+    }
+
+    public void setVectorDatabaseServiceName(String name) {
+        setTextValue(
+            SETTING_NAME_VECTOR_DATABASE_SERVICE_NAME,
+            name
+        );
+    }
+
+    public void setQdrantConnectionProperties(
+        RagQdrantConnectionPropertiesModel model
+    ) {
+        settingService.setObjectValue(
+            SETTING_NAME_QDRANT_CONNECTION_PROPERTIES,
+            EzyMapBuilder.mapBuilder()
+                .put("baseUrl", model.getBaseUrl())
+                .put("collectionName", model.getCollectionName())
+                .toMap()
+        );
+        String apiKey = model.getApiKey();
+        if (apiKey.matches(PATTERN_HIDDEN_PASSWORD)) {
+            apiKey = settingService.getPasswordValue(
+                SETTING_NAME_QDRANT_CONNECTION_API_KEY
+            );
+        } else {
+            settingService.setPasswordValue(
+                SETTING_NAME_QDRANT_CONNECTION_API_KEY,
+                apiKey
+            );
+        }
+        model.setApiKey(apiKey);
+        settingService.cacheValueIfNotNull(
+            SETTING_NAME_QDRANT_CONNECTION_PROPERTIES,
+            model
+        );
+        settingService.setLastUpdateTime(
+            SETTING_NAME_QDRANT_CONNECTION_PROPERTIES
+        );
+    }
+
+    public void setQdrantVectorSize(int vectorSize) {
+        settingService.setIntValue(
+            SETTING_NAME_QDRANT_VECTOR_SIZE,
+            vectorSize
+        );
+        settingService.cacheValueIfNotNull(
+            SETTING_NAME_QDRANT_VECTOR_SIZE,
+            vectorSize
+        );
+    }
+
+    public void setMySqlConnectionProperties(
+        RagMySqlConnectionPropertiesModel model
+    ) {
+        settingService.setObjectValue(
+            SETTING_NAME_MYSQL_CONNECTION_PROPERTIES,
+            EzyMapBuilder.mapBuilder()
+                .put("baseUrl", model.getBaseUrl())
+                .toMap()
+        );
+        String accessToken = model.getAccessToken();
+        if (accessToken.matches(PATTERN_HIDDEN_PASSWORD)) {
+            accessToken = settingService.getPasswordValue(
+                SETTING_NAME_MYSQL_CONNECTION_ACCESS_TOKEN
+            );
+        } else {
+            settingService.setPasswordValue(
+                SETTING_NAME_MYSQL_CONNECTION_ACCESS_TOKEN,
+                accessToken
+            );
+        }
+        model.setAccessToken(accessToken);
+        settingService.cacheValueIfNotNull(
+            SETTING_NAME_MYSQL_CONNECTION_PROPERTIES,
+            model
+        );
+        settingService.setLastUpdateTime(
+            SETTING_NAME_MYSQL_CONNECTION_PROPERTIES
+        );
+    }
+
+    public void setMySqlCollectionName(String collectionName) {
+        setTextValue(
+            SETTING_NAME_MYSQL_COLLECTION_NAME,
+            collectionName
+        );
+    }
+
+    public void setMySqlVectorSize(int vectorSize) {
+        settingService.setIntValue(
+            SETTING_NAME_MYSQL_VECTOR_SIZE,
+            vectorSize
+        );
+        settingService.cacheValueIfNotNull(
+            SETTING_NAME_MYSQL_VECTOR_SIZE,
+            vectorSize
+        );
+    }
+
+    public RagMySqlConnectionPropertiesModel getMySqlConnectionPropertiesInDb() {
+        RagMySqlConnectionPropertiesModel model =
+            settingService
+                .getObjectValue(
+                    SETTING_NAME_MYSQL_CONNECTION_PROPERTIES,
+                    RagMySqlConnectionPropertiesModel.class
+                );
+        if (model != null) {
+            model.setAccessToken(
+                settingService.getPasswordValue(
+                    SETTING_NAME_MYSQL_CONNECTION_ACCESS_TOKEN
+                )
+            );
+        }
+        return model != null
+            ? model
+            : new RagMySqlConnectionPropertiesModel();
+    }
+
+    public String getMySqlCollectionName() {
+        return settingService.getTextValue(
+            SETTING_NAME_MYSQL_COLLECTION_NAME,
+            DEFAULT_MYSQL_COLLECTION_NAME
+        );
+    }
+
+    public int getMySqlVectorSize() {
+        return settingService.getIntValue(
+            SETTING_NAME_MYSQL_VECTOR_SIZE,
+            DEFAULT_MYSQL_VECTOR_SIZE
+        );
+    }
+
+    public RagQdrantConnectionPropertiesModel getConnectionPropertiesInDb() {
+        RagQdrantConnectionPropertiesModel model =
+            settingService
+                .getObjectValue(
+                    SETTING_NAME_QDRANT_CONNECTION_PROPERTIES,
+                    RagQdrantConnectionPropertiesModel.class
+                );
+        if (model != null) {
+            model.setApiKey(
+                settingService.getPasswordValue(
+                    SETTING_NAME_QDRANT_CONNECTION_API_KEY
+                )
+            );
+        }
+        return model != null
+            ? model
+            : new RagQdrantConnectionPropertiesModel();
+    }
+
+    private void setTextValue(String settingName, String value) {
+        settingService.setTextValue(
+            settingName,
+            value
+        );
+        settingService.cacheValueIfNotNull(
+            settingName,
+            value
+        );
+    }
+}

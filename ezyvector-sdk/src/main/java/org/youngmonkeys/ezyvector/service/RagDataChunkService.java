@@ -1,0 +1,135 @@
+/*
+ * Copyright 2026 youngmonkeys.org
+ * 
+ * Licensed under the ezyplatform, Version 1.0.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     https://youngmonkeys.org/licenses/ezyplatform-1.0.0.txt
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+package org.youngmonkeys.ezyvector.service;
+
+import lombok.AllArgsConstructor;
+import org.youngmonkeys.ezyplatform.exception.ResourceNotFoundException;
+import org.youngmonkeys.ezyvector.converter.ezyvectorEntityToModelConverter;
+import org.youngmonkeys.ezyvector.converter.ezyvectorModelToEntityConverter;
+import org.youngmonkeys.ezyvector.converter.ezyvectorResultToModelConverter;
+import org.youngmonkeys.ezyvector.entity.RagDataChunk;
+import org.youngmonkeys.ezyvector.model.RagDataChunkEmbeddingModel;
+import org.youngmonkeys.ezyvector.model.RagDataChunkModel;
+import org.youngmonkeys.ezyvector.model.RagSaveDataChunkModel;
+import org.youngmonkeys.ezyvector.repo.RagDataChunkRepository;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import static com.tvd12.ezyfox.io.EzyLists.newArrayList;
+
+@AllArgsConstructor
+public class RagDataChunkService {
+
+    private final RagDataChunkRepository dataChunkRepository;
+    private final ezyvectorEntityToModelConverter entityToModelConverter;
+    private final ezyvectorModelToEntityConverter modelToEntityConverter;
+    private final ezyvectorResultToModelConverter resultToModelConverter;
+
+    public long addDataChunk(
+        RagSaveDataChunkModel model
+    ) {
+        RagDataChunk entity = modelToEntityConverter
+            .toEntity(model);
+        dataChunkRepository.save(entity);
+        return entity.getId();
+    }
+
+    public void updateDataChunk(
+        long chunkId,
+        RagSaveDataChunkModel model
+    ) {
+        RagDataChunk entity = getDataChunkEntityByIdOrThrow(chunkId);
+        modelToEntityConverter.mergeToEntity(model, entity);
+        dataChunkRepository.save(entity);
+    }
+
+    public void updateEmbeddingById(
+        long chunkId,
+        float[] embedding
+    ) {
+        dataChunkRepository.updateEmbeddingById(
+            chunkId,
+            embedding
+        );
+    }
+
+    public void deleteDataChunkBySourceTypeAndSourceIdAndIndexGt(
+        String sourceType,
+        long sourceId,
+        long indexGt
+    ) {
+        dataChunkRepository.deleteBySourceTypeAndSourceIdAndChunkIndexGt(
+            sourceType,
+            sourceId,
+            indexGt
+        );
+    }
+
+    public RagDataChunkModel getDataChunkBySourceTypeAndSourceIdAndIndex(
+        String sourceType,
+        long sourceId,
+        long index
+    ) {
+        return entityToModelConverter.toModel(
+            dataChunkRepository.findBySourceTypeAndSourceIdAndChunkIndex(
+                sourceType,
+                sourceId,
+                index
+            )
+        );
+    }
+
+    public RagDataChunkEmbeddingModel getEmbeddingBySourceTypeAndSourceIdAndIndex(
+        String sourceType,
+        long sourceId,
+        long index
+    ) {
+        return resultToModelConverter.toModel(
+            dataChunkRepository
+                .findIdAndContentHashAndEmbeddingBySourceTypeAndSourceIdAndChunkIndex(
+                    sourceType,
+                    sourceId,
+                    index
+                )
+        );
+    }
+
+    public List<RagDataChunkModel> getDataChunksByIds(
+        Collection<Long> chunkIds
+    ) {
+        if (chunkIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return newArrayList(
+            dataChunkRepository.findListByIds(chunkIds),
+            entityToModelConverter::toModel
+        );
+    }
+
+    private RagDataChunk getDataChunkEntityByIdOrThrow(
+        long chunkId
+    ) {
+        RagDataChunk entity = dataChunkRepository
+            .findById(chunkId);
+        if (entity == null) {
+            throw new ResourceNotFoundException("dataChunk");
+        }
+        return entity;
+    }
+}

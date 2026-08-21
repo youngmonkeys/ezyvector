@@ -1,0 +1,48 @@
+<!--
+ ~ Copyright 2026 youngmonkeys.org
+ ~
+ ~ Licensed under the ezyplatform, Version 1.0.0 (the "License");
+ ~ you may not use this file except in compliance with the License.
+ ~ You may obtain a copy of the License at
+ ~
+ ~     https://youngmonkeys.org/licenses/ezyplatform-1.0.0.txt
+ ~
+ ~ Unless required by applicable law or agreed to in writing, software
+ ~ distributed under the License is distributed on an "AS IS" BASIS,
+ ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ~ See the License for the specific language governing permissions and
+ ~ limitations under the License.
+-->
+
+<!DOCTYPE html>
+<html
+        lang="en"
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+        layout:decorate="~{ezyadmin}">
+<head>
+    <script>
+        const ezyvector = {};
+        var ezyarticle = ezyarticle || {};
+        var ecommerce = ecommerce || {};
+    </script>
+</head>
+<body>
+<div layout:fragment="content" class="row">
+    <th:block th:replace="~{ezyvector/chunk/chunk-data :: content}" />
+    <div class="col-12">
+        <hr>
+    </div>
+    <th:block th:replace="~{ezyvector/chunk/chunk-list :: content}" />
+</div>
+<th:block layout:fragment="scripts">
+    <th:block th:replace="~{scripts/suggestion :: input}" />
+    <th:block th:replace="~{ezyarticle/scripts/suggestion :: post-title}" />
+    <th:block th:replace="~{ecommerce/scripts/suggestion :: product}" />
+    <th:block th:replace="~{ezyvector/chunk/scripts :: chunk-data}" />
+    <th:block th:replace="~{ezyvector/chunk/chunk-data :: scripts}" />
+    <th:block th:replace="~{ezyvector/chunk/chunk-list :: scripts}" />
+</th:block>
+</body>
+</html>

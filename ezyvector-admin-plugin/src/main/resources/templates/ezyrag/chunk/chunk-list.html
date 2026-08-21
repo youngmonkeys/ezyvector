@@ -1,0 +1,363 @@
+<!--
+ ~ Copyright 2026 youngmonkeys.org
+ ~ 
+ ~ Licensed under the ezyplatform, Version 1.0.0 (the "License");
+ ~ you may not use this file except in compliance with the License.
+ ~ You may obtain a copy of the License at
+ ~ 
+ ~     https://youngmonkeys.org/licenses/ezyplatform-1.0.0.txt
+ ~ 
+ ~ Unless required by applicable law or agreed to in writing, software
+ ~ distributed under the License is distributed on an "AS IS" BASIS,
+ ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ~ See the License for the specific language governing permissions and
+ ~ limitations under the License.
+-->
+
+<html
+        lang="en"
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="content">
+    <div class="col-12 mb-3">
+        <h3>[[#{chunk_list}]]</h3>
+    </div>
+    <div class="col-12">
+        <div class="row">
+            <div class="col-lg-3"></div>
+            <div class="col-lg-3 col-md-4 page-search">
+                <label for="sourceTypeInput" class="text-nowrap">[[#{source_type}]]: </label>
+                <input type="text" id="sourceTypeInput" class="form-control"
+                       th:placeholder="#{source_type}"
+                       onchange="ezyvector.onDataChunkFilterChanged();">
+            </div>
+            <div class="col-lg-3 col-md-4 page-search">
+                <label for="sourceIdInput" class="text-nowrap">[[#{source_id}]]: </label>
+                <input type="number" id="sourceIdInput" class="form-control"
+                       th:placeholder="#{source_id}"
+                       onchange="ezyvector.onDataChunkFilterChanged();">
+            </div>
+            <div class="col-lg-3 col-md-4 page-search">
+                <label for="keywordInput" class="text-nowrap">[[#{keyword}]]: </label>
+                <input type="text" id="keywordInput" class="form-control"
+                       th:placeholder="#{keyword}"
+                       onkeydown="ezyvector.onKeydownToFetchDataChunkList(event);">
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body table-responsive p-0">
+                <table class="table table-bordered table-hover text-nowrap align-middle-cells">
+                    <thead>
+                    <tr>
+                        <th class="text-center">[[#{id}]]</th>
+                        <th>[[#{source_type}]]</th>
+                        <th class="text-center">[[#{source_id}]]</th>
+                        <th class="text-center">[[#{chunk_index}]]</th>
+                        <th class="text-center data-chunk-score-column">[[#{score}]]</th>
+                        <th>[[#{content}]]</th>
+                        <th>[[#{metadata}]]</th>
+                        <th class="text-center">[[#{has_embedding}]]</th>
+                        <th class="text-center">[[#{created_at}]]</th>
+                        <th class="text-center">[[#{updated_at}]]</th>
+                    </tr>
+                    </thead>
+                    <tbody id="dataChunkListBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer clearfix">
+                <span><span id="dataChunkCountText">0</span>
+                    [[${#strings.toLowerCase(#messages.msg('of'))}]]
+                    <span id="totalDataChunkText">0</span>
+                    [[${#strings.toLowerCase(#messages.msg('data_chunks'))}]]
+                </span>
+                <ul class="pagination pagination-sm m-0 float-right">
+                    <li class="page-item">
+                        <a class="page-link cursor-pointer" id="firstPageButton"
+                           onclick="ezyvector.fetchDataChunkList('first');">
+                            <i class="fas fa-arrow-circle-left pl-1 pr-1"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link cursor-pointer" id="prevPageButton"
+                           onclick="ezyvector.fetchDataChunkList('prev');">[[#{prev}]]</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link cursor-pointer" id="nextPageButton"
+                           onclick="ezyvector.fetchDataChunkList('next');">[[#{next}]]</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link cursor-pointer" id="lastPageButton"
+                           onclick="ezyvector.fetchDataChunkList('last');">
+                            <i class="fas fa-arrow-circle-right pl-1 pr-1"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</th:block>
+<script th:fragment="scripts">
+ezyvector.lastDataChunkPageToken = {};
+ezyvector.dataChunkScoreById = {};
+ezyvector.searchDataChunkIds = [];
+
+ezyvector.onKeydownToFetchDataChunkList = function(event) {
+    if (event.key === 'Enter') {
+        ezyvector.fetchDataChunkList('first');
+    }
+}
+
+ezyvector.onDataChunkFilterChanged = function() {
+    ezyvector.fetchDataChunkList('first');
+}
+
+ezyvector.changeBrowserUrl = function() {
+    var url = location.pathname;
+    var queryString = ezyvector.buildDataChunkFilterQueryString();
+    if (queryString) {
+        url += '?' + queryString.substring(1);
+    }
+    window.history.pushState({}, '', url);
+}
+
+ezyvector.buildDataChunkFilterQueryString = function() {
+    var queryString = '';
+    var sourceType = $('#sourceTypeInput').val();
+    var sourceId = $('#sourceIdInput').val();
+    var keyword = $('#keywordInput').val();
+    var sortOrder = $('#sortOrderSelect').val();
+    if (sourceType) {
+        queryString += '&sourceType=' + encodeURIComponent(sourceType);
+    }
+    if (sourceId) {
+        queryString += '&sourceId=' + encodeURIComponent(sourceId);
+    }
+    if (keyword) {
+        queryString += '&keyword=' + encodeURIComponent(keyword);
+    }
+    if (sortOrder) {
+        queryString += '&sortOrder=' + encodeURIComponent(sortOrder);
+    }
+    return queryString;
+}
+
+ezyvector.buildDataChunkApiFilterQueryString = function() {
+    var queryString = '';
+    var sourceType = $('#sourceTypeInput').val();
+    var sourceId = $('#sourceIdInput').val();
+    var sortOrder = $('#sortOrderSelect').val();
+    if (sourceType) {
+        queryString += '&sourceType=' + encodeURIComponent(sourceType);
+    }
+    if (sourceId) {
+        queryString += '&sourceId=' + encodeURIComponent(sourceId);
+    }
+    if (sortOrder) {
+        queryString += '&sortOrder=' + encodeURIComponent(sortOrder);
+    }
+    return queryString;
+}
+
+ezyvector.fillSearchInputsFromUrl = function() {
+    var params = new URLSearchParams(location.search);
+    $('#sourceTypeInput').val(params.get('sourceType') || '');
+    $('#sourceIdInput').val(params.get('sourceId') || '');
+    $('#keywordInput').val(params.get('keyword') || '');
+    $('#sortOrderSelect').val(params.get('sortOrder') || 'ID_DESC');
+}
+
+ezyvector.isDataChunkKeywordEntered = function() {
+    return !!($('#keywordInput').val() || '').trim();
+}
+
+ezyvector.decorateDataChunkScoreColumn = function() {
+    $('.data-chunk-score-column').toggleClass(
+        'd-none',
+        !ezyvector.isDataChunkKeywordEntered()
+    );
+}
+
+ezyvector.fetchDataChunkList = function(action) {
+    var keyword = ($('#keywordInput').val() || '').trim();
+    ezyvector.decorateDataChunkScoreColumn();
+    if (keyword) {
+        ezyvector.searchDataChunks(action, keyword);
+        return;
+    }
+    ezyvector.dataChunkScoreById = {};
+    ezyvector.searchDataChunkIds = [];
+    ezyvector.fetchDataChunkListByFilter(action);
+}
+
+ezyvector.searchDataChunks = function(action, keyword) {
+    if (action !== 'first' && action) {
+        return;
+    }
+    ezyadmin.showLoadingScreen();
+    $.ajax({
+        url: '/ezyvector/api/v1/chunk-data/search?limit=12&query='
+            + encodeURIComponent(keyword),
+        type: 'POST',
+        dataType: 'json'
+    })
+    .done(function(data) {
+        ezyadmin.hideLoadingScreen();
+        ezyvector.dataChunkScoreById = {};
+        ezyvector.searchDataChunkIds = [];
+        (data || []).forEach((item) => {
+            ezyvector.searchDataChunkIds.push(item.chunkId);
+            ezyvector.dataChunkScoreById[item.chunkId] = item.score;
+        });
+        if (ezyvector.searchDataChunkIds.length === 0) {
+            ezyvector.lastDataChunkPageToken = {};
+            $('#dataChunkCountText').text(0);
+            $('#totalDataChunkText').text(0);
+            $('#dataChunkListBody').html('');
+            ezyvector.decoratePaginationButtons({});
+            ezyvector.changeBrowserUrl();
+            return;
+        }
+        ezyvector.fetchDataChunkListByFilter('first');
+    })
+    .fail(function(e) {
+        ezyadmin.hideLoadingScreen();
+        ezyadmin.processUpdateApiErrors({}, e);
+    });
+}
+
+ezyvector.fetchDataChunkListByFilter = function(action) {
+    var queryString = ezyvector.searchDataChunkIds.length
+        ? ezyvector.buildDataChunkApiFilterQueryString()
+        : ezyvector.buildDataChunkFilterQueryString();
+    if (ezyvector.searchDataChunkIds.length) {
+        queryString += '&chunkIds='
+            + encodeURIComponent(ezyvector.searchDataChunkIds.join(','));
+    }
+    if (action === 'next') {
+        if (ezyvector.lastDataChunkPageToken.next) {
+            queryString += '&nextPageToken='
+                + encodeURIComponent(ezyvector.lastDataChunkPageToken.next);
+        } else {
+            return;
+        }
+    } else if (action === 'prev') {
+        if (ezyvector.lastDataChunkPageToken.prev) {
+            queryString += '&prevPageToken='
+                + encodeURIComponent(ezyvector.lastDataChunkPageToken.prev);
+        } else {
+            return;
+        }
+    } else if (action === 'last') {
+        queryString += '&lastPage=true';
+    }
+    $.ajax({
+        url: '/ezyvector/api/v1/data-chunks?limit=12' + queryString,
+        type: 'GET',
+        dataType: 'json'
+    })
+    .done(function(data) {
+        $('#dataChunkCountText').text(data.count);
+        $('#totalDataChunkText').text(data.total);
+        ezyvector.lastDataChunkPageToken = data.pageToken || {};
+        $('#dataChunkListBody').html(
+            ezyvector.buildDataChunkListBodyHtml(
+                ezyvector.sortDataChunksBySearchResult(data.items || [])
+            )
+        );
+        ezyvector.decoratePaginationButtons(data);
+        ezyvector.changeBrowserUrl();
+    })
+    .fail(function(e) {
+        ezyadmin.processGetApiErrors(e);
+    });
+}
+
+ezyvector.sortDataChunksBySearchResult = function(dataChunks) {
+    if (!ezyvector.searchDataChunkIds.length) {
+        return dataChunks;
+    }
+    var dataChunkById = {};
+    dataChunks.forEach((dataChunk) => {
+        dataChunkById[dataChunk.id] = dataChunk;
+    });
+    var answer = [];
+    ezyvector.searchDataChunkIds.forEach((id) => {
+        if (dataChunkById[id]) {
+            answer.push(dataChunkById[id]);
+        }
+    });
+    return answer;
+}
+
+ezyvector.formatDataChunkScore = function(dataChunkId) {
+    var score = ezyvector.dataChunkScoreById[dataChunkId];
+    return score == null ? '' : Number(score).toFixed(4);
+}
+
+ezyvector.formatDataChunkMetadata = function(metadata) {
+    if (!metadata) {
+        return '';
+    }
+    return Object.keys(metadata)
+        .map((key) => `${ezyadmin.escapeHtml(key)}: ${ezyadmin.escapeHtml(metadata[key])}`)
+        .join('<br/>');
+}
+
+ezyvector.decoratePaginationButtons = function(data) {
+    if (data.continuation && data.continuation.hasNext) {
+        $('#nextPageButton').removeClass('text-secondary');
+        $('#lastPageButton').removeClass('text-secondary');
+    } else {
+        $('#nextPageButton').addClass('text-secondary');
+        $('#lastPageButton').addClass('text-secondary');
+    }
+    if (data.continuation && data.continuation.hasPrevious) {
+        $('#prevPageButton').removeClass('text-secondary');
+        $('#firstPageButton').removeClass('text-secondary');
+    } else {
+        $('#prevPageButton').addClass('text-secondary');
+        $('#firstPageButton').addClass('text-secondary');
+    }
+}
+
+ezyvector.buildDataChunkListBodyHtml = function(dataChunks) {
+    var html = '';
+    dataChunks.forEach((dataChunk) => {
+        html += ezyvector.buildDataChunkListItemHtml(dataChunk);
+    });
+    return html;
+}
+
+ezyvector.buildDataChunkListItemHtml = function(dataChunk) {
+    var scoreHtml = ezyvector.isDataChunkKeywordEntered()
+        ? `<td class="text-center data-chunk-score-column">${ezyvector.formatDataChunkScore(dataChunk.id)}</td>`
+        : '';
+    return `
+        <tr>
+            <td class="text-center">${dataChunk.id}</td>
+            <td>${ezyadmin.getI18nMessage(dataChunk.sourceType?.toLowerCase() || '')}</td>
+            <td class="text-center">${dataChunk.sourceId}</td>
+            <td class="text-center">${dataChunk.chunkIndex}</td>
+            ${scoreHtml}
+            <td class="text-wrap" style="min-width: 360px; max-width: 520px;">
+                ${ezyadmin.escapeHtml(ezyadmin.removeHtmlTagAndSub(dataChunk.content || '', 240))}
+            </td>
+            <td class="text-wrap" style="min-width: 160px; max-width: 260px;">
+                ${ezyvector.formatDataChunkMetadata(dataChunk.metadata)}
+            </td>
+            <td class="text-center">${dataChunk.hasEmbedding ? '<i class="fas fa-check text-success"></i>' : ''}</td>
+            <td class="text-center">${ezyadmin.formatTimeStamp(dataChunk.createdAt)}</td>
+            <td class="text-center">${ezyadmin.formatTimeStamp(dataChunk.updatedAt)}</td>
+        </tr>
+        `;
+}
+
+ezyvector.fillSearchInputsFromUrl();
+ezyvector.fetchDataChunkList();
+</script>
+</body>
+</html>
