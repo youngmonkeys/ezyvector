@@ -14,19 +14,14 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.test;
+package org.youngmonkeys.ezyvector.constant;
 
-import com.tvd12.ezyfox.tool.EzySameObjectScriptCreator;
+public final class EzyVectorConstants {
 
-public class ConvertScriptGenerator {
+    public static final String DEFAULT_VECTOR_DATA_DIR = "data/ezyvector";
+    public static final String SETTING_NAME_VECTOR_DATA_DIR =
+        "ezyrag_vector_data_dir";
 
-    public static void main(String[] args) {
-        String script = new EzySameObjectScriptCreator()
-            .originClass(RagDataChunk.class)
-            .originObjectName("entity")
-            .targetClass(RagDataChunkModel.class)
-            .targetObjectName("model")
-            .generateBuildFuncScript();
-        System.out.println(script);
-    }
+    private EzyVectorConstants() {}
+
 }

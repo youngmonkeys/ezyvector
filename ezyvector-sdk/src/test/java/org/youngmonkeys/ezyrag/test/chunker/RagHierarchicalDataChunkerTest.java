@@ -22,8 +22,6 @@ import org.mockito.MockitoAnnotations;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.youngmonkeys.ezyvector.chunker.RagHierarchicalDataChunker;
-import org.youngmonkeys.ezyvector.constant.RagDataChunkerName;
-import org.youngmonkeys.ezyvector.model.RagChunkedResultModel;
 import org.youngmonkeys.ezyvector.service.ezyvectorSettingService;
 
 import java.util.List;

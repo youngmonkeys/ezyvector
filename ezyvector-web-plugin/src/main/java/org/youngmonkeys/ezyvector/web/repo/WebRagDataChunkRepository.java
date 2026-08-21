@@ -18,8 +18,6 @@ package org.youngmonkeys.ezyvector.web.repo;
 
 import com.tvd12.ezydata.database.EzyDatabaseRepository;
 import com.tvd12.ezyfox.database.annotation.EzyRepository;
-import org.youngmonkeys.ezyvector.entity.RagDataChunk;
-import org.youngmonkeys.ezyvector.repo.RagDataChunkRepository;
 
 @EzyRepository
 public interface WebRagDataChunkRepository extends

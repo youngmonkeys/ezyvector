@@ -30,7 +30,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import java.time.LocalDateTime;
 
-import static org.youngmonkeys.ezyvector.constant.ezyvectorTableNames.TABLE_NAME_COLLECTION;
+import static org.youngmonkeys.ezyvector.constant.EzyVectorTableNames.TABLE_NAME_COLLECTION;
 
 @Getter
 @Setter

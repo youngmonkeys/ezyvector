@@ -14,19 +14,17 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.test;
+package org.youngmonkeys.ezyvector.model;
 
-import com.tvd12.ezyfox.tool.EzySameObjectScriptCreator;
+import lombok.Builder;
+import lombok.Getter;
 
-public class ConvertScriptGenerator {
+import java.util.Map;
 
-    public static void main(String[] args) {
-        String script = new EzySameObjectScriptCreator()
-            .originClass(RagDataChunk.class)
-            .originObjectName("entity")
-            .targetClass(RagDataChunkModel.class)
-            .targetObjectName("model")
-            .generateBuildFuncScript();
-        System.out.println(script);
-    }
+@Getter
+@Builder
+public class VectorSearchResultModel {
+    private final long chunkId;
+    private final float score;
+    private final Map<String, Object> payload;
 }

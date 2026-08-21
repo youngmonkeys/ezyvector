@@ -17,7 +17,6 @@
 package org.youngmonkeys.ezyvector.test;
 
 import org.youngmonkeys.devtools.pagination.PaginationClassesGenerator;
-import org.youngmonkeys.ezyvector.entity.RagDataChunk;
 
 public class ezyvectorPaginationClassesGenerator {
 

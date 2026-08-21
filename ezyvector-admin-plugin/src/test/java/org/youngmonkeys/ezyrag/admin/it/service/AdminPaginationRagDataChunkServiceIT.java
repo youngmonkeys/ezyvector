@@ -25,8 +25,6 @@ import org.youngmonkeys.devtools.InstanceRandom;
 import org.youngmonkeys.ezyvector.admin.repo.AdminRagDataChunkRepository;
 import org.youngmonkeys.ezyvector.admin.pagination.AdminRagDataChunkPaginationParameterConverter;
 import org.youngmonkeys.ezyvector.admin.service.AdminPaginationRagDataChunkService;
-import org.youngmonkeys.ezyvector.entity.RagDataChunk;
-import org.youngmonkeys.ezyvector.model.RagDataChunkModel;
 import org.youngmonkeys.ezyvector.pagination.DefaultRagDataChunkFilter;
 import org.youngmonkeys.ezyvector.pagination.RagDataChunkFilter;
 import org.youngmonkeys.ezyvector.pagination.RagDataChunkPaginationSortOrder;

@@ -1,12 +1,12 @@
 /*
  * Copyright 2026 youngmonkeys.org
- * 
+ *
  * Licensed under the ezyplatform, Version 1.0.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     https://youngmonkeys.org/licenses/ezyplatform-1.0.0.txt
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,19 +14,12 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.test;
+package org.youngmonkeys.ezyvector.admin.request;
 
-import com.tvd12.ezyfox.tool.EzySameObjectScriptCreator;
+import lombok.Getter;
+import lombok.Setter;
 
-public class ConvertScriptGenerator {
-
-    public static void main(String[] args) {
-        String script = new EzySameObjectScriptCreator()
-            .originClass(RagDataChunk.class)
-            .originObjectName("entity")
-            .targetClass(RagDataChunkModel.class)
-            .targetObjectName("model")
-            .generateBuildFuncScript();
-        System.out.println(script);
-    }
+@Getter
+@Setter
+public class AdminSaveEzyVectorSettingsRequest {
 }

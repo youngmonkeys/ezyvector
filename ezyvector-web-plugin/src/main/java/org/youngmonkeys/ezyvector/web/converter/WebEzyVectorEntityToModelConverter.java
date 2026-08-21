@@ -14,19 +14,19 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.test;
+package org.youngmonkeys.ezyvector.web.converter;
 
-import com.tvd12.ezyfox.tool.EzySameObjectScriptCreator;
+import com.tvd12.ezyfox.bean.annotation.EzySingleton;
+import org.youngmonkeys.ezyplatform.time.ClockProxy;
+import org.youngmonkeys.ezyvector.converter.EzyVectorEntityToModelConverter;
 
-public class ConvertScriptGenerator {
+@EzySingleton
+public class WebEzyVectorEntityToModelConverter
+    extends EzyVectorEntityToModelConverter {
 
-    public static void main(String[] args) {
-        String script = new EzySameObjectScriptCreator()
-            .originClass(RagDataChunk.class)
-            .originObjectName("entity")
-            .targetClass(RagDataChunkModel.class)
-            .targetObjectName("model")
-            .generateBuildFuncScript();
-        System.out.println(script);
+    public WebezyvectorEntityToModelConverter(
+        ClockProxy clock
+    ) {
+        super(clock);
     }
 }
