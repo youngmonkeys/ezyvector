@@ -48,7 +48,7 @@ public class RagCollection {
     private String name;
 
     @Column(name = "vector_size")
-    private int vectorSize;
+    private long vectorSize;
 
     @Column(name = "distance")
     private String distance;

@@ -23,7 +23,7 @@ import java.util.Map;
 
 @Getter
 @Builder
-public class RagVectorPointModel {
+public class VectorPointModel {
     private final long id;
     private final float[] vector;
     private final Map<String, Object> payload;

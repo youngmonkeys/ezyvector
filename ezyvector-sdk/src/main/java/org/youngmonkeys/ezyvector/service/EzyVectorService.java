@@ -24,7 +24,8 @@ import org.youngmonkeys.ezyvector.entity.RagCollection;
 import org.youngmonkeys.ezyvector.entity.RagCollectionPoint;
 import org.youngmonkeys.ezyvector.entity.RagCollectionSegment;
 import org.youngmonkeys.ezyvector.hnsw.HnswIndex;
-import org.youngmonkeys.ezyvector.model.RagVectorPointModel;
+import org.youngmonkeys.ezyvector.model.CreateVectorCollectionResultModel;
+import org.youngmonkeys.ezyvector.model.VectorPointModel;
 import org.youngmonkeys.ezyvector.model.VectorSearchResultModel;
 import org.youngmonkeys.ezyvector.repo.RagCollectionPointRepository;
 import org.youngmonkeys.ezyvector.repo.RagCollectionRepository;
@@ -77,14 +78,15 @@ public class EzyVectorService extends EzyLoggable {
         this.objectMapper = objectMapper;
     }
 
-    @Override
-    public void createCollectionIfAbsent() throws Exception {
+    public CreateVectorCollectionResultModel createCollectionIfAbsent(
+        int vectorSize
+    ) throws Exception {
         String collectionName = getCollectionName();
         if (collectionRepository.findByName(collectionName) == null) {
             LocalDateTime now = LocalDateTime.now();
             RagCollection entity = new RagCollection();
             entity.setName(collectionName);
-            entity.setVectorSize(getVectorSize());
+            entity.setVectorSize(vectorSize);
             entity.setDistance("COSINE");
             entity.setIndexType("HNSW");
             entity.setStatus("ACTIVE");
@@ -95,10 +97,13 @@ public class EzyVectorService extends EzyLoggable {
         ensureMutableSegment();
         startBackfillIfNecessary();
         startHnswBuildIfNecessary();
+        return CreateVectorCollectionResultModel.builder()
+            .vectorSize(vectorSize)
+            .build();
     }
 
     public void upsert(
-        List<RagVectorPointModel> points
+        List<VectorPointModel> points
     ) throws Exception {
         RagCollection collection = getCollectionOrThrow();
         ensureMutableSegment(collection);
@@ -109,7 +114,7 @@ public class EzyVectorService extends EzyLoggable {
         synchronized (writeLock) {
             List<EzyVectorFileStorage.VectorRecord> records =
                 new ArrayList<>(points.size());
-            for (RagVectorPointModel point : points) {
+            for (VectorPointModel point : points) {
                 RagCollectionPoint entity = collectionPointRepository
                     .findByCollectionIdAndPointId(
                         collection.getId(),

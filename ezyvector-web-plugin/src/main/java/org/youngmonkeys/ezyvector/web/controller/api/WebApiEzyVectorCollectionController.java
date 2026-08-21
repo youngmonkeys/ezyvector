@@ -25,7 +25,7 @@ import com.tvd12.ezyhttp.server.core.annotation.DoPut;
 import com.tvd12.ezyhttp.server.core.annotation.PathVariable;
 import com.tvd12.ezyhttp.server.core.annotation.RequestBody;
 import lombok.AllArgsConstructor;
-import org.youngmonkeys.ezyvector.model.RagVectorPointModel;
+import org.youngmonkeys.ezyvector.model.VectorPointModel;
 import org.youngmonkeys.ezyvector.model.VectorSearchResultModel;
 import org.youngmonkeys.ezyvector.web.service.WebEzyVectorService;
 
@@ -55,7 +55,7 @@ public class WebApiEzyVectorCollectionController {
     @DoGet("/{collectionName}")
     public Map<String, Object> collectionNameGet(
         @PathVariable String collectionName
-    ) throws Exception {
+    ) {
         checkCollectionName(collectionName);
         return okResult(
             EzyMapBuilder.mapBuilder()
@@ -117,13 +117,13 @@ public class WebApiEzyVectorCollectionController {
     }
 
     @SuppressWarnings("unchecked")
-    private List<RagVectorPointModel> toPointModels(
+    private List<VectorPointModel> toPointModels(
         List<Map<String, Object>> points
     ) {
-        List<RagVectorPointModel> models = new ArrayList<>(points.size());
+        List<VectorPointModel> models = new ArrayList<>(points.size());
         for (Map<String, Object> point : points) {
             models.add(
-                RagVectorPointModel.builder()
+                VectorPointModel.builder()
                     .id(toLongOrZeroFromObject(point.get("id")))
                     .vector(toVector((List<Object>) point.get("vector")))
                     .payload((Map<String, Object>) point.get("payload"))
