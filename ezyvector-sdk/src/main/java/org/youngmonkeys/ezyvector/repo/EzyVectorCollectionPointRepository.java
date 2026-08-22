@@ -32,7 +32,7 @@ public interface EzyVectorCollectionPointRepository
     );
 
     @EzyQuery(
-        "SELECT e FROM RagCollectionPoint e " +
+        "SELECT e FROM EzyVectorCollectionPoint e " +
             "WHERE e.collectionId = ?0 AND e.id > ?1 " +
             "ORDER BY e.id ASC"
     )

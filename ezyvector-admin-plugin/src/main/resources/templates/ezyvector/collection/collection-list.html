@@ -20,12 +20,9 @@
         xmlns:th="http://www.thymeleaf.org">
 <body>
 <th:block th:fragment="content">
-    <div class="col-12 mb-3">
-        <h3>[[#{vector_collection_list}]]</h3>
-    </div>
     <div class="col-12">
         <div class="row">
-            <div class="col-lg-3"></div>
+            <div class="col-lg-6 col-md-4"></div>
             <div class="col-lg-3 col-md-4 page-search">
                 <label for="statusSelect" class="text-nowrap">[[#{status}]]: </label>
                 <select id="statusSelect" class="form-control"
@@ -35,14 +32,6 @@
                             th:value="${status}"
                             th:text="${#messages.msg(#strings.toLowerCase(status))}">
                     </option>
-                </select>
-            </div>
-            <div class="col-lg-3 col-md-4 page-search">
-                <label for="sortOrderSelect" class="text-nowrap">[[#{sort_order}]]: </label>
-                <select id="sortOrderSelect" class="form-control"
-                        onchange="ezyvector.onVectorCollectionFilterChanged();">
-                    <option value="ID_DESC">[[#{newest}]]</option>
-                    <option value="ID_ASC">[[#{oldest}]]</option>
                 </select>
             </div>
             <div class="col-lg-3 col-md-4 page-search">
