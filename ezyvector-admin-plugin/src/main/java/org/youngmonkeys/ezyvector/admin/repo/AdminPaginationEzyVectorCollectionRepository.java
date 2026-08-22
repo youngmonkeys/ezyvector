@@ -14,15 +14,11 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.test;
+package org.youngmonkeys.ezyvector.admin.repo;
 
-import org.youngmonkeys.devtools.pagination.PaginationClassesGenerator;
-import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegment;
+import com.tvd12.ezyfox.database.annotation.EzyRepository;
+import org.youngmonkeys.ezyvector.repo.PaginationEzyVectorCollectionRepository;
 
-public class EzyVectorPaginationClassesGenerator {
-
-    public static void main(String[] args) throws Exception {
-        new PaginationClassesGenerator(EzyVectorCollectionSegment.class)
-            .generate();
-    }
-}
+@EzyRepository
+public class AdminPaginationEzyVectorCollectionRepository
+    extends PaginationEzyVectorCollectionRepository {}

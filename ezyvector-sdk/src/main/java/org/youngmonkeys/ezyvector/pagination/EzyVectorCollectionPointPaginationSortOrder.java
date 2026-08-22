@@ -14,15 +14,9 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.test;
+package org.youngmonkeys.ezyvector.pagination;
 
-import org.youngmonkeys.devtools.pagination.PaginationClassesGenerator;
-import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegment;
-
-public class EzyVectorPaginationClassesGenerator {
-
-    public static void main(String[] args) throws Exception {
-        new PaginationClassesGenerator(EzyVectorCollectionSegment.class)
-            .generate();
-    }
+public enum EzyVectorCollectionPointPaginationSortOrder {
+    ID_ASC,
+    ID_DESC
 }

@@ -14,15 +14,8 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.test;
+package org.youngmonkeys.ezyvector.pagination;
 
-import org.youngmonkeys.devtools.pagination.PaginationClassesGenerator;
-import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegment;
+import org.youngmonkeys.ezyplatform.pagination.CommonStorageFilter;
 
-public class EzyVectorPaginationClassesGenerator {
-
-    public static void main(String[] args) throws Exception {
-        new PaginationClassesGenerator(EzyVectorCollectionSegment.class)
-            .generate();
-    }
-}
+public interface EzyVectorCollectionSegmentFilter extends CommonStorageFilter {}

@@ -14,15 +14,21 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.test;
+package org.youngmonkeys.ezyvector.repo;
 
-import org.youngmonkeys.devtools.pagination.PaginationClassesGenerator;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegment;
+import org.youngmonkeys.ezyvector.pagination.EzyVectorCollectionSegmentFilter;
+import org.youngmonkeys.ezyvector.pagination.EzyVectorCollectionSegmentPaginationParameter;
+import org.youngmonkeys.ezyplatform.repo.CommonPaginationRepository;
 
-public class EzyVectorPaginationClassesGenerator {
+public class PaginationEzyVectorCollectionSegmentRepository extends CommonPaginationRepository<
+    EzyVectorCollectionSegmentFilter,
+    EzyVectorCollectionSegmentPaginationParameter,
+    Long,
+    EzyVectorCollectionSegment> {
 
-    public static void main(String[] args) throws Exception {
-        new PaginationClassesGenerator(EzyVectorCollectionSegment.class)
-            .generate();
+    @Override
+    protected Class<EzyVectorCollectionSegment> getEntityType() {
+        return EzyVectorCollectionSegment.class;
     }
 }
