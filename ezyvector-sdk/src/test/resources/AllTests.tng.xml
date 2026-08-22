@@ -20,7 +20,7 @@
     <test name="All">
         <packages>
             <package name="org.youngmonkeys.ezyvector.test" />
-            <package name="org.youngmonkeys.ezyvector.test.chunker" />
+            <package name="org.youngmonkeys.ezyvector.test.hnsw" />
         </packages>
     </test>
 </suite>
