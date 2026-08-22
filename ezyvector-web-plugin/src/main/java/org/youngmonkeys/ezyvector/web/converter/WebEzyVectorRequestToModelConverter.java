@@ -17,7 +17,12 @@
 package org.youngmonkeys.ezyvector.web.converter;
 
 import org.youngmonkeys.ezyvector.model.SaveVectorCollectionModel;
+import org.youngmonkeys.ezyvector.model.SaveVectorPointModel;
 import org.youngmonkeys.ezyvector.web.request.WebCreateVectorCollectionRequest;
+import org.youngmonkeys.ezyvector.web.request.WebUpsertVectorPointsRequest;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class WebEzyVectorRequestToModelConverter {
 
@@ -35,5 +40,30 @@ public class WebEzyVectorRequestToModelConverter {
                     .build()
             )
             .build();
+    }
+
+    public List<SaveVectorPointModel> toSaveVectorPointModels(
+        WebUpsertVectorPointsRequest request
+    ) {
+        List<WebUpsertVectorPointsRequest.Point> points = request.getPoints();
+        List<SaveVectorPointModel> models = new ArrayList<>(points.size());
+        for (WebUpsertVectorPointsRequest.Point point : points) {
+            models.add(
+                SaveVectorPointModel.builder()
+                    .id(point.getId())
+                    .vector(toVector(point.getVector()))
+                    .payload(point.getPayload())
+                    .build()
+            );
+        }
+        return models;
+    }
+
+    private float[] toVector(List<Float> values) {
+        float[] vector = new float[values.size()];
+        for (int i = 0; i < values.size(); ++i) {
+            vector[i] = values.get(i);
+        }
+        return vector;
     }
 }

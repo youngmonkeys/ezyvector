@@ -16,27 +16,21 @@
 
 package org.youngmonkeys.ezyvector.web.test;
 
-import com.tvd12.ezyhttp.server.boot.EzyHttpApplicationBootstrap;
-import com.tvd12.ezyhttp.server.core.annotation.ComponentsScan;
-import com.tvd12.ezyhttp.server.core.annotation.PropertiesSources;
+import org.youngmonkeys.devtools.swagger.SwaggerGenerator;
 
-@PropertiesSources({
-    "config.properties",
-    "setup.properties"
-})
-@ComponentsScan({
-    "org.youngmonkeys.ezyplatform",
-    "org.youngmonkeys.ezyvector",
-    "org.youngmonkeys.ezyai",
-    "org.youngmonkeys.ezyarticle",
-    "org.youngmonkeys.ezychat",
-    "org.youngmonkeys.graphql",
-    "org.youngmonkeys.ecommerce",
-    "org.youngmonkeys.ezymail"
-})
-public class ezyvectorWebPluginStartupTest {
+import java.io.File;
+
+public class EzyVectorWebPluginSwaggerGenerator {
 
     public static void main(String[] args) throws Exception {
-        EzyHttpApplicationBootstrap.start(ezyvectorWebPluginStartupTest.class);
+        SwaggerGenerator swaggerGenerator = new SwaggerGenerator(
+            "org.youngmonkeys.ezyvector.web.controller"
+        );
+        String filePath = "src/test/resources/static/files/swagger.yaml";
+        File srcFolder = new File("src");
+        if (!srcFolder.exists()) {
+            filePath = "ezyvector-web-plugin/" + filePath;
+        }
+        swaggerGenerator.generateToFile(filePath);
     }
 }

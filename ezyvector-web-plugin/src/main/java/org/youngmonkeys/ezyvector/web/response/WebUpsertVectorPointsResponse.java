@@ -1,12 +1,12 @@
 /*
  * Copyright 2026 youngmonkeys.org
- * 
+ *
  * Licensed under the ezyplatform, Version 1.0.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     https://youngmonkeys.org/licenses/ezyplatform-1.0.0.txt
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,20 +14,14 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.web.request;
+package org.youngmonkeys.ezyvector.web.response;
 
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
+@Builder
 @Getter
-@Setter
-public class WebCreateVectorCollectionRequest {
-    private Vectors vectors;
-
-    @Getter
-    @Setter
-    public static class Vectors {
-        private long size;
-        private String distance;
-    }
+public class WebUpsertVectorPointsResponse {
+    private boolean result;
+    private String status;
 }

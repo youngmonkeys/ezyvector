@@ -14,20 +14,24 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.web.request;
+package org.youngmonkeys.ezyvector.web.test;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.tvd12.ezyhttp.server.core.annotation.ComponentsScan;
+import com.tvd12.ezyhttp.server.core.annotation.PropertiesSources;
+import org.youngmonkeys.ezyplatform.test.IntegrationTestRunner;
 
-@Getter
-@Setter
-public class WebCreateVectorCollectionRequest {
-    private Vectors vectors;
+@PropertiesSources({
+    "config.properties",
+})
+@ComponentsScan({
+    "org.youngmonkeys.ezyplatform",
+    "org.youngmonkeys.ezyvector"
+})
+public class EzyVectorWebPluginIntegrationTestRunner {
 
-    @Getter
-    @Setter
-    public static class Vectors {
-        private long size;
-        private String distance;
+    public static void main(String[] args) throws Exception {
+        IntegrationTestRunner.run(
+            EzyVectorWebPluginIntegrationTestRunner.class
+        );
     }
 }

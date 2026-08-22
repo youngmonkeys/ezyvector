@@ -1,12 +1,12 @@
 /*
  * Copyright 2026 youngmonkeys.org
- * 
+ *
  * Licensed under the ezyplatform, Version 1.0.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     https://youngmonkeys.org/licenses/ezyplatform-1.0.0.txt
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,24 +14,24 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.web.test;
+package org.youngmonkeys.ezyvector.web.request;
 
-import com.tvd12.ezyhttp.server.core.annotation.ComponentsScan;
-import com.tvd12.ezyhttp.server.core.annotation.PropertiesSources;
-import org.youngmonkeys.ezyplatform.test.IntegrationTestRunner;
+import lombok.Getter;
+import lombok.Setter;
 
-@PropertiesSources({
-    "config.properties",
-})
-@ComponentsScan({
-    "org.youngmonkeys.ezyplatform",
-    "org.youngmonkeys.ezyvector"
-})
-public class ezyvectorWebPluginIntegrationTestRunner {
+import java.util.List;
+import java.util.Map;
 
-    public static void main(String[] args) throws Exception {
-        IntegrationTestRunner.run(
-            ezyvectorWebPluginIntegrationTestRunner.class
-        );
+@Getter
+@Setter
+public class WebUpsertVectorPointsRequest {
+    private List<Point> points;
+
+    @Getter
+    @Setter
+    public static class Point {
+        private long id;
+        private List<Float> vector;
+        private Map<String, Object> payload;
     }
 }

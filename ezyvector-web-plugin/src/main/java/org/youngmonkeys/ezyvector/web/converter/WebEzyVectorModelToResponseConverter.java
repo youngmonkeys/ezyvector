@@ -17,9 +17,34 @@
 package org.youngmonkeys.ezyvector.web.converter;
 
 import org.youngmonkeys.ezyvector.model.EzyVectorCollectionModel;
+import org.youngmonkeys.ezyvector.model.EzyVectorSearchResultModel;
+import org.youngmonkeys.ezyvector.web.response.WebEzyVectorSearchResponse;
 import org.youngmonkeys.ezyvector.web.response.WebGetVectorCollectionResponse;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class WebEzyVectorModelToResponseConverter {
+
+    public WebEzyVectorSearchResponse toSearchResponse(
+        List<EzyVectorSearchResultModel> results
+    ) {
+        List<WebEzyVectorSearchResponse.Result> resultList =
+            new ArrayList<>(results.size());
+        for (EzyVectorSearchResultModel result : results) {
+            resultList.add(
+                WebEzyVectorSearchResponse.Result.builder()
+                    .id(result.getChunkId())
+                    .score(result.getScore())
+                    .payload(result.getPayload())
+                    .build()
+            );
+        }
+        return WebEzyVectorSearchResponse.builder()
+            .result(resultList)
+            .status("ok")
+            .build();
+    }
 
     public WebGetVectorCollectionResponse toGetVectorCollectionResponse(
         EzyVectorCollectionModel model

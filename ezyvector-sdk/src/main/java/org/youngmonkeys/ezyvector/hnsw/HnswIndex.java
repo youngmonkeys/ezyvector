@@ -16,6 +16,8 @@
 
 package org.youngmonkeys.ezyvector.hnsw;
 
+import lombok.Getter;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -584,6 +586,7 @@ public class HnswIndex {
         }
     }
 
+    @Getter
     public static final class SearchResult {
         private final long id;
         private final float score;
@@ -591,14 +594,6 @@ public class HnswIndex {
         SearchResult(long id, float score) {
             this.id = id;
             this.score = score;
-        }
-
-        public long getId() {
-            return id;
-        }
-
-        public float getScore() {
-            return score;
         }
     }
 }
