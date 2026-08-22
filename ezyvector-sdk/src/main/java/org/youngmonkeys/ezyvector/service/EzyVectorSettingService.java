@@ -18,7 +18,11 @@ package org.youngmonkeys.ezyvector.service;
 
 import org.youngmonkeys.ezyplatform.service.DefaultSettingService;
 
+import java.util.Collections;
+import java.util.Set;
+
 import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.DEFAULT_VECTOR_DATA_DIR;
+import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.SETTING_NAME_VECTOR_COLLECTIONS_ALLOWED_IPS;
 import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.SETTING_NAME_VECTOR_COLLECTIONS_API_KEY;
 import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.SETTING_NAME_VECTOR_DATA_DIR;
 
@@ -42,6 +46,13 @@ public class EzyVectorSettingService {
     public String getVectorCollectionsApiKey() {
         return settingService.getPasswordValue(
             SETTING_NAME_VECTOR_COLLECTIONS_API_KEY
+        );
+    }
+
+    public Set<String> getVectorCollectionsAllowedIps() {
+        return settingService.getSetStringValue(
+            SETTING_NAME_VECTOR_COLLECTIONS_ALLOWED_IPS,
+            Collections.emptySet()
         );
     }
 }

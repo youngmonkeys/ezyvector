@@ -20,8 +20,11 @@ import com.tvd12.ezyhttp.server.core.annotation.Service;
 import org.youngmonkeys.ezyplatform.admin.service.AdminSettingService;
 import org.youngmonkeys.ezyvector.service.EzyVectorSettingService;
 
+import java.util.Collection;
+
 import static com.tvd12.ezyfox.io.EzyStrings.isNotBlank;
 import static org.youngmonkeys.ezyplatform.constant.CommonConstants.PATTERN_HIDDEN_PASSWORD;
+import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.SETTING_NAME_VECTOR_COLLECTIONS_ALLOWED_IPS;
 import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.SETTING_NAME_VECTOR_COLLECTIONS_API_KEY;
 
 @Service
@@ -45,5 +48,12 @@ public class AdminEzyVectorSettingService extends EzyVectorSettingService {
                 value
             );
         }
+    }
+
+    public void setVectorCollectionsAllowedIps(Collection<String> values) {
+        settingService.setArrayValue(
+            SETTING_NAME_VECTOR_COLLECTIONS_ALLOWED_IPS,
+            values
+        );
     }
 }

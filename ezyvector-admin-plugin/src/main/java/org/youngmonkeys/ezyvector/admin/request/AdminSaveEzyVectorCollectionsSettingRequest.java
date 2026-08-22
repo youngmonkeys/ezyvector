@@ -16,11 +16,24 @@
 
 package org.youngmonkeys.ezyvector.admin.request;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.tvd12.ezyhttp.core.json.SetStringDeserializer;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Collections;
+import java.util.Set;
 
 @Getter
 @Setter
 public class AdminSaveEzyVectorCollectionsSettingRequest {
     private String vectorCollectionsApiKey;
+    @JsonDeserialize(using = SetStringDeserializer.class)
+    private Set<String> vectorCollectionsAllowedIps;
+
+    public Set<String> getVectorCollectionsAllowedIps() {
+        return vectorCollectionsAllowedIps != null
+            ? vectorCollectionsAllowedIps
+            : Collections.emptySet();
+    }
 }

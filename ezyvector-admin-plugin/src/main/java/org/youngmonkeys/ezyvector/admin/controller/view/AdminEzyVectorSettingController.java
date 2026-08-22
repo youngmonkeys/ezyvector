@@ -24,6 +24,8 @@ import com.tvd12.ezyhttp.server.core.view.View;
 import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyvector.admin.service.AdminEzyVectorSettingService;
 
+import java.util.Set;
+
 @Controller
 @Authenticated
 @EzyFeature("settings_management")
@@ -36,11 +38,17 @@ public class AdminEzyVectorSettingController {
     public View settingsGet() {
         String vectorCollectionsApiKey = ezyVectorSettingService
             .getVectorCollectionsApiKey();
+        Set<String> vectorCollectionsAllowedIps = ezyVectorSettingService
+            .getVectorCollectionsAllowedIps();
         return View.builder()
             .template("ezyvector/setting/index")
             .addVariable(
                 "vectorCollectionsApiKey",
                 vectorCollectionsApiKey
+            )
+            .addVariable(
+                "vectorCollectionsAllowedIps",
+                vectorCollectionsAllowedIps
             )
             .build();
     }

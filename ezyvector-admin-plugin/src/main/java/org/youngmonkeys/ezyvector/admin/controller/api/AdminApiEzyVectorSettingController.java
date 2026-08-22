@@ -45,6 +45,9 @@ public class AdminApiEzyVectorSettingController {
         ezyVectorSettingService.setVectorCollectionsApiKey(
             request.getVectorCollectionsApiKey()
         );
+        ezyVectorSettingService.setVectorCollectionsAllowedIps(
+            request.getVectorCollectionsAllowedIps()
+        );
         return ResponseEntity.noContent();
     }
 }
