@@ -31,9 +31,9 @@ import org.youngmonkeys.ezyvector.model.EzyVectorCollectionModel;
 import org.youngmonkeys.ezyvector.model.EzyVectorSearchResultModel;
 import org.youngmonkeys.ezyvector.model.SaveVectorCollectionModel;
 import org.youngmonkeys.ezyvector.model.SaveVectorPointModel;
-import org.youngmonkeys.ezyvector.repo.RagCollectionPointRepository;
-import org.youngmonkeys.ezyvector.repo.RagCollectionRepository;
-import org.youngmonkeys.ezyvector.repo.RagCollectionSegmentRepository;
+import org.youngmonkeys.ezyvector.repo.EzyVectorCollectionPointRepository;
+import org.youngmonkeys.ezyvector.repo.EzyVectorCollectionRepository;
+import org.youngmonkeys.ezyvector.repo.EzyVectorCollectionSegmentRepository;
 import org.youngmonkeys.ezyvector.result.EzyVectorCollectionVectorSizeResult;
 import org.youngmonkeys.ezyvector.storage.EzyVectorFileStorage;
 
@@ -54,9 +54,9 @@ public class EzyVectorService extends EzyLoggable {
 
     private final FileSystemManager fileSystemManager;
     private final EzyVectorSettingService ezyVectorSettingService;
-    private final RagCollectionRepository collectionRepository;
-    private final RagCollectionPointRepository collectionPointRepository;
-    private final RagCollectionSegmentRepository collectionSegmentRepository;
+    private final EzyVectorCollectionRepository collectionRepository;
+    private final EzyVectorCollectionPointRepository collectionPointRepository;
+    private final EzyVectorCollectionSegmentRepository collectionSegmentRepository;
     private final EzyVectorEntityToModelConverter entityToModelConverter;
     private final EzyVectorModelToEntityConverter modelToEntityConverter;
     private final Object writeLock = new Object();

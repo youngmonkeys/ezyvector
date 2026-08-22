@@ -14,24 +14,25 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.web.converter;
+package org.youngmonkeys.ezyvector.web.controller.decorator;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tvd12.ezyfox.bean.annotation.EzySingleton;
-import org.youngmonkeys.ezyplatform.time.ClockProxy;
-import org.youngmonkeys.ezyvector.converter.EzyVectorModelToEntityConverter;
+import lombok.AllArgsConstructor;
+import org.youngmonkeys.ezyvector.model.EzyVectorCollectionModel;
+import org.youngmonkeys.ezyvector.web.converter.WebEzyVectorModelToResponseConverter;
+import org.youngmonkeys.ezyvector.web.response.WebGetVectorCollectionResponse;
 
 @EzySingleton
-public class WebEzyVectorModelToEntityConverter
-    extends EzyVectorModelToEntityConverter {
+@AllArgsConstructor
+public class WebEzyVectorCollectionModelDecorator {
 
-    public WebEzyVectorModelToEntityConverter(
-        ClockProxy clock,
-        ObjectMapper objectMapper
+    private final WebEzyVectorModelToResponseConverter modelToResponseConverter;
+
+    public WebGetVectorCollectionResponse decorateToGetVectorCollectionResponse(
+        EzyVectorCollectionModel collection
     ) {
-        super(
-            clock,
-            objectMapper
+        return modelToResponseConverter.toGetVectorCollectionResponse(
+            collection
         );
     }
 }

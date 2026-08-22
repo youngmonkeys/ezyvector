@@ -17,7 +17,6 @@
 package org.youngmonkeys.ezyvector.web.controller.api;
 
 import com.tvd12.ezyfox.util.EzyMapBuilder;
-import com.tvd12.ezyhttp.core.exception.HttpNotFoundException;
 import com.tvd12.ezyhttp.server.core.annotation.Controller;
 import com.tvd12.ezyhttp.server.core.annotation.DoGet;
 import com.tvd12.ezyhttp.server.core.annotation.DoPost;
@@ -27,9 +26,12 @@ import com.tvd12.ezyhttp.server.core.annotation.RequestBody;
 import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyvector.model.EzyVectorSearchResultModel;
 import org.youngmonkeys.ezyvector.model.SaveVectorPointModel;
+import org.youngmonkeys.ezyvector.web.controller.service.WebEzyVectorCollectionControllerService;
 import org.youngmonkeys.ezyvector.web.converter.WebEzyVectorRequestToModelConverter;
 import org.youngmonkeys.ezyvector.web.request.WebCreateVectorCollectionRequest;
 import org.youngmonkeys.ezyvector.web.request.WebEzyVectorSearchRequest;
+import org.youngmonkeys.ezyvector.web.response.WebCreateVectorCollectionResponse;
+import org.youngmonkeys.ezyvector.web.response.WebGetVectorCollectionResponse;
 import org.youngmonkeys.ezyvector.web.service.WebEzyVectorService;
 import org.youngmonkeys.ezyvector.web.validator.WebEzyVectorCollectionValidator;
 
@@ -37,7 +39,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Collections.singletonMap;
 import static org.youngmonkeys.ezyplatform.util.Numbers.toLongOrZeroFromObject;
 
 @Controller("/collections")
@@ -45,11 +46,12 @@ import static org.youngmonkeys.ezyplatform.util.Numbers.toLongOrZeroFromObject;
 public class WebApiEzyVectorCollectionController {
 
     private final WebEzyVectorService vectorDatabaseService;
+    private final WebEzyVectorCollectionControllerService vectorCollectionControllerService;
     private final WebEzyVectorCollectionValidator vectorCollectionValidator;
     private final WebEzyVectorRequestToModelConverter vectorRequestToModelConverter;
 
     @DoPut("/{collectionName}")
-    public Map<String, Object> collectionNamePut(
+    public WebCreateVectorCollectionResponse collectionNamePut(
         @PathVariable String collectionName,
         @RequestBody WebCreateVectorCollectionRequest request
     ) throws Exception {
@@ -60,33 +62,18 @@ public class WebApiEzyVectorCollectionController {
                 request
             )
         );
-        return okResult(true);
+        return WebCreateVectorCollectionResponse.builder()
+            .result(Boolean.TRUE)
+            .status("ok")
+            .build();
     }
 
     @DoGet("/{collectionName}")
-    public Map<String, Object> collectionNameGet(
+    public WebGetVectorCollectionResponse collectionNameGet(
         @PathVariable String collectionName
     ) {
-        return okResult(
-            EzyMapBuilder.mapBuilder()
-                .put(
-                    "config",
-                    EzyMapBuilder.mapBuilder()
-                        .put(
-                            "params",
-                            EzyMapBuilder.mapBuilder()
-                                .put(
-                                    "vectors",
-                                    EzyMapBuilder.mapBuilder()
-                                        .put("size", vectorDatabaseService.getVectorSize())
-                                        .toMap()
-                                )
-                                .toMap()
-                        )
-                        .toMap()
-                )
-                .toMap()
-        );
+        return vectorCollectionControllerService
+            .getVectorCollectionByName(collectionName);
     }
 
     @SuppressWarnings("unchecked")
@@ -101,7 +88,7 @@ public class WebApiEzyVectorCollectionController {
             collectionName,
             toPointModels(points)
         );
-        return okResult(true);
+        return
     }
 
     @SuppressWarnings("unchecked")
@@ -110,7 +97,6 @@ public class WebApiEzyVectorCollectionController {
         @PathVariable String collectionName,
         @RequestBody WebEzyVectorSearchRequest request
     ) throws Exception {
-        checkCollectionName(collectionName);
         List<EzyVectorSearchResultModel> results = vectorDatabaseService.search(
             collectionName,
             request.getVector(),
@@ -158,12 +144,5 @@ public class WebApiEzyVectorCollectionController {
             vector[i] = ((Number) values.get(i)).floatValue();
         }
         return vector;
-    }
-
-    private Map<String, Object> okResult(Object result) {
-        return EzyMapBuilder.mapBuilder()
-            .put("result", result)
-            .put("status", "ok")
-            .toMap();
     }
 }

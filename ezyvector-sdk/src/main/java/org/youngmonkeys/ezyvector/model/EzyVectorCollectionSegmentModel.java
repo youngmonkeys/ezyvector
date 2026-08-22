@@ -14,16 +14,23 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.repo;
+package org.youngmonkeys.ezyvector.model;
 
-import com.tvd12.ezydata.database.EzyDatabaseRepository;
-import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegment;
+import lombok.Builder;
+import lombok.Getter;
 
-public interface RagCollectionSegmentRepository
-    extends EzyDatabaseRepository<Long, EzyVectorCollectionSegment> {
-
-    EzyVectorCollectionSegment findByCollectionIdAndSegmentNo(
-        long collectionId,
-        long segmentNo
-    );
+@Getter
+@Builder
+public class EzyVectorCollectionSegmentModel {
+    private long id;
+    private long collectionId;
+    private long segmentNo;
+    private String segmentType;
+    private String status;
+    private long pointsCount;
+    private Long minPointId;
+    private Long maxPointId;
+    private long indexVersion;
+    private long createdAt;
+    private long updatedAt;
 }

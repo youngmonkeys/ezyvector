@@ -14,14 +14,16 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.web.repo;
+package org.youngmonkeys.ezyvector.repo;
 
 import com.tvd12.ezydata.database.EzyDatabaseRepository;
-import com.tvd12.ezyfox.database.annotation.EzyRepository;
-import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPoint;
-import org.youngmonkeys.ezyvector.repo.RagCollectionPointRepository;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegment;
 
-@EzyRepository
-public interface WebRagCollectionPointRepository extends
-    RagCollectionPointRepository,
-    EzyDatabaseRepository<Long, EzyVectorCollectionPoint> {}
+public interface EzyVectorCollectionSegmentRepository
+    extends EzyDatabaseRepository<Long, EzyVectorCollectionSegment> {
+
+    EzyVectorCollectionSegment findByCollectionIdAndSegmentNo(
+        long collectionId,
+        long segmentNo
+    );
+}

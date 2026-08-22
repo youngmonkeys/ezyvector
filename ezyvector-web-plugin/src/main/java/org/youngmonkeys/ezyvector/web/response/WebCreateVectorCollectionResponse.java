@@ -14,20 +14,14 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.model;
+package org.youngmonkeys.ezyvector.web.response;
 
 import lombok.Builder;
 import lombok.Getter;
 
-@Getter
 @Builder
-public class SaveVectorCollectionModel {
-    private Vectors vectors;
-
-    @Getter
-    @Builder
-    public static class Vectors {
-        private long size;
-        private String distance;
-    }
+@Getter
+public class WebCreateVectorCollectionResponse {
+    private boolean result;
+    private String status;
 }

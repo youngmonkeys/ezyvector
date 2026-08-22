@@ -16,36 +16,37 @@
 
 package org.youngmonkeys.ezyvector.web.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tvd12.ezyfox.bean.annotation.EzySingleton;
-import org.youngmonkeys.ezyplatform.web.service.WebSettingService;
+import org.youngmonkeys.ezyplatform.web.manager.WebFileSystemManager;
 import org.youngmonkeys.ezyvector.service.EzyVectorService;
-import org.youngmonkeys.ezyvector.web.repo.WebRagCollectionPointRepository;
-import org.youngmonkeys.ezyvector.web.repo.WebRagCollectionRepository;
-import org.youngmonkeys.ezyvector.web.repo.WebRagCollectionSegmentRepository;
+import org.youngmonkeys.ezyvector.service.EzyVectorSettingService;
+import org.youngmonkeys.ezyvector.web.converter.WebEzyVectorEntityToModelConverter;
+import org.youngmonkeys.ezyvector.web.converter.WebEzyVectorModelToEntityConverter;
+import org.youngmonkeys.ezyvector.web.repo.WebEzyVectorCollectionPointRepository;
+import org.youngmonkeys.ezyvector.web.repo.WebEzyVectorCollectionRepository;
+import org.youngmonkeys.ezyvector.web.repo.WebEzyVectorCollectionSegmentRepository;
 
 @EzySingleton
 public class WebEzyVectorService
     extends EzyVectorService {
 
     public WebEzyVectorService(
-        WebSettingService settingService,
-        WebRagCollectionRepository collectionRepository,
-        WebRagCollectionPointRepository collectionPointRepository,
-        WebRagCollectionSegmentRepository collectionSegmentRepository,
-        ObjectMapper objectMapper
+        WebFileSystemManager fileSystemManager,
+        EzyVectorSettingService ezyVectorSettingService,
+        WebEzyVectorCollectionRepository collectionRepository,
+        WebEzyVectorCollectionPointRepository collectionPointRepository,
+        WebEzyVectorCollectionSegmentRepository collectionSegmentRepository,
+        WebEzyVectorEntityToModelConverter entityToModelConverter,
+        WebEzyVectorModelToEntityConverter modelToEntityConverter
     ) {
         super(
-            settingService,
+            fileSystemManager,
+            ezyVectorSettingService,
             collectionRepository,
             collectionPointRepository,
             collectionSegmentRepository,
-            objectMapper
+            entityToModelConverter,
+            modelToEntityConverter
         );
-    }
-
-    @Override
-    public String getProviderName() {
-        return "MYSQL_ENGINE";
     }
 }

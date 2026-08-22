@@ -17,14 +17,16 @@
 package org.youngmonkeys.ezyvector.test;
 
 import com.tvd12.ezyfox.tool.EzySameObjectScriptCreator;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegment;
+import org.youngmonkeys.ezyvector.model.EzyVectorCollectionSegmentModel;
 
 public class ConvertScriptGenerator {
 
     public static void main(String[] args) {
         String script = new EzySameObjectScriptCreator()
-            .originClass(Object.class)
+            .originClass(EzyVectorCollectionSegment.class)
             .originObjectName("entity")
-            .targetClass(Object.class)
+            .targetClass(EzyVectorCollectionSegmentModel.class)
             .targetObjectName("model")
             .generateBuildFuncScript();
         System.out.println(script);

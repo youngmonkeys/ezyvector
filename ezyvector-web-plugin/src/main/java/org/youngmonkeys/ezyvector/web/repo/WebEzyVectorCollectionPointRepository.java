@@ -14,31 +14,14 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.repo;
+package org.youngmonkeys.ezyvector.web.repo;
 
 import com.tvd12.ezydata.database.EzyDatabaseRepository;
-import com.tvd12.ezyfox.database.annotation.EzyQuery;
-import com.tvd12.ezyfox.util.EzyNext;
+import com.tvd12.ezyfox.database.annotation.EzyRepository;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPoint;
+import org.youngmonkeys.ezyvector.repo.EzyVectorCollectionPointRepository;
 
-import java.util.List;
-
-public interface RagCollectionPointRepository
-    extends EzyDatabaseRepository<Long, EzyVectorCollectionPoint> {
-
-    EzyVectorCollectionPoint findByCollectionIdAndPointId(
-        long collectionId,
-        long pointId
-    );
-
-    @EzyQuery(
-        "SELECT e FROM RagCollectionPoint e " +
-            "WHERE e.collectionId = ?0 AND e.id > ?1 " +
-            "ORDER BY e.id ASC"
-    )
-    List<EzyVectorCollectionPoint> findListByCollectionIdAndIdGreaterThan(
-        long collectionId,
-        long id,
-        EzyNext next
-    );
-}
+@EzyRepository
+public interface WebEzyVectorCollectionPointRepository extends
+    EzyVectorCollectionPointRepository,
+    EzyDatabaseRepository<Long, EzyVectorCollectionPoint> {}

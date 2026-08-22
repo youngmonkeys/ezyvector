@@ -22,7 +22,7 @@ import org.youngmonkeys.ezyplatform.result.IdResult;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollection;
 import org.youngmonkeys.ezyvector.result.EzyVectorCollectionVectorSizeResult;
 
-public interface RagCollectionRepository
+public interface EzyVectorCollectionRepository
     extends EzyDatabaseRepository<Long, EzyVectorCollection> {
 
     EzyVectorCollection findByName(String name);
