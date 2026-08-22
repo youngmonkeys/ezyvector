@@ -24,6 +24,8 @@ import com.tvd12.ezyhttp.server.core.annotation.PathVariable;
 import com.tvd12.ezyhttp.server.core.view.View;
 import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyvector.admin.controller.service.AdminEzyVectorCollectionControllerService;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPointStatus;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegmentStatus;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionStatus;
 
 import static com.tvd12.ezyfox.io.EzyLists.newArrayList;
@@ -66,9 +68,37 @@ public class AdminVectorCollectionController {
         return View.builder()
             .template("ezyvector/collection/details")
             .addVariable(
+                "vectorCollectionPointStatuses",
+                newArrayList(
+                    EzyVectorCollectionPointStatus.values(),
+                    Enum::toString
+                )
+            )
+            .addVariable(
+                "vectorCollectionSegmentStatuses",
+                newArrayList(
+                    EzyVectorCollectionSegmentStatus.values(),
+                    Enum::toString
+                )
+            )
+            .addVariable(
                 "vectorCollection",
                 vectorCollectionControllerService
                     .getVectorCollectionById(collectionId)
+            )
+            .appendValuesToVariable(
+                VIEW_VARIABLE_ADDITIONAL_MESSAGE_KEYS,
+                newArrayList(
+                    EzyVectorCollectionPointStatus.values(),
+                    it -> it.toString().toLowerCase()
+                )
+            )
+            .appendValuesToVariable(
+                VIEW_VARIABLE_ADDITIONAL_MESSAGE_KEYS,
+                newArrayList(
+                    EzyVectorCollectionSegmentStatus.values(),
+                    it -> it.toString().toLowerCase()
+                )
             )
             .build();
     }

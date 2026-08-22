@@ -1,0 +1,230 @@
+<!--
+ ~ Copyright 2026 youngmonkeys.org
+ ~
+ ~ Licensed under the ezyplatform, Version 1.0.0 (the "License");
+ ~ you may not use this file except in compliance with the License.
+ ~ You may obtain a copy of the License at
+ ~
+ ~     https://youngmonkeys.org/licenses/ezyplatform-1.0.0.txt
+ ~
+ ~ Unless required by applicable law or agreed to in writing, software
+ ~ distributed under the License is distributed on an "AS IS" BASIS,
+ ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ~ See the License for the specific language governing permissions and
+ ~ limitations under the License.
+-->
+
+<html
+        lang="en"
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="content">
+    <div class="col-12">
+        <div class="row">
+            <div class="col-lg-6 col-md-4"></div>
+            <div class="col-lg-3 col-md-4 page-search">
+                <label for="collectionSegmentStatusSelect" class="text-nowrap">
+                    [[#{status}]]:
+                </label>
+                <select id="collectionSegmentStatusSelect" class="form-control"
+                        onchange="ezyvector.onCollectionSegmentFilterChanged();">
+                    <option value="">[[#{all}]]</option>
+                    <option th:each="status : ${vectorCollectionSegmentStatuses}"
+                            th:value="${status}"
+                            th:text="${#messages.msg(#strings.toLowerCase(status))}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-4 page-search">
+                <label for="collectionSegmentSortOrderSelect" class="text-nowrap">
+                    [[#{sort_order}]]:
+                </label>
+                <select id="collectionSegmentSortOrderSelect" class="form-control"
+                        onchange="ezyvector.onCollectionSegmentFilterChanged();">
+                    <option value="ID_DESC">[[#{newest}]]</option>
+                    <option value="ID_ASC">[[#{oldest}]]</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body table-responsive p-0">
+                <table class="table table-bordered table-hover text-nowrap align-middle-cells">
+                    <thead>
+                    <tr>
+                        <th class="text-center">[[#{id}]]</th>
+                        <th class="text-center">[[#{segment_no}]]</th>
+                        <th class="text-center">[[#{segment_type}]]</th>
+                        <th class="text-center">[[#{status}]]</th>
+                        <th class="text-center">[[#{points_count}]]</th>
+                        <th class="text-center">[[#{min_point_id}]]</th>
+                        <th class="text-center">[[#{max_point_id}]]</th>
+                        <th class="text-center">[[#{index_version}]]</th>
+                        <th class="text-center">[[#{created_at}]]</th>
+                        <th class="text-center">[[#{updated_at}]]</th>
+                    </tr>
+                    </thead>
+                    <tbody id="collectionSegmentListBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer clearfix">
+                <span><span id="collectionSegmentCountText">0</span>
+                    [[${#strings.toLowerCase(#messages.msg('of'))}]]
+                    <span id="totalCollectionSegmentText">0</span>
+                    [[${#strings.toLowerCase(#messages.msg('collection_segments'))}]]
+                </span>
+                <ul class="pagination pagination-sm m-0 float-right">
+                    <li class="page-item">
+                        <a class="page-link cursor-pointer" id="collectionSegmentFirstPageButton"
+                           onclick="ezyvector.fetchCollectionSegmentList('first');">
+                            <i class="fas fa-arrow-circle-left pl-1 pr-1"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link cursor-pointer" id="collectionSegmentPrevPageButton"
+                           onclick="ezyvector.fetchCollectionSegmentList('prev');">[[#{prev}]]</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link cursor-pointer" id="collectionSegmentNextPageButton"
+                           onclick="ezyvector.fetchCollectionSegmentList('next');">[[#{next}]]</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link cursor-pointer" id="collectionSegmentLastPageButton"
+                           onclick="ezyvector.fetchCollectionSegmentList('last');">
+                            <i class="fas fa-arrow-circle-right pl-1 pr-1"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</th:block>
+<script th:fragment="scripts">
+ezyvector.lastCollectionSegmentPageToken = {};
+
+ezyvector.onCollectionSegmentFilterChanged = function() {
+    ezyvector.fetchCollectionSegmentList('first');
+}
+
+ezyvector.buildCollectionSegmentFilterQueryString = function() {
+    var queryString = '';
+    var status = $('#collectionSegmentStatusSelect').val();
+    var sortOrder = $('#collectionSegmentSortOrderSelect').val();
+    if (status) {
+        queryString += '&status=' + encodeURIComponent(status);
+    }
+    if (sortOrder) {
+        queryString += '&sortOrder=' + encodeURIComponent(sortOrder);
+    }
+    return queryString;
+}
+
+ezyvector.fetchCollectionSegmentList = function(action) {
+    var queryString = ezyvector.buildCollectionSegmentFilterQueryString();
+    if (action === 'next') {
+        if (ezyvector.lastCollectionSegmentPageToken.next) {
+            queryString += '&nextPageToken='
+                + encodeURIComponent(ezyvector.lastCollectionSegmentPageToken.next);
+        } else {
+            return;
+        }
+    } else if (action === 'prev') {
+        if (ezyvector.lastCollectionSegmentPageToken.prev) {
+            queryString += '&prevPageToken='
+                + encodeURIComponent(ezyvector.lastCollectionSegmentPageToken.prev);
+        } else {
+            return;
+        }
+    } else if (action === 'last') {
+        queryString += '&lastPage=true';
+    }
+    $.ajax({
+        url: '/ezyvector/api/v1/vector-collections/'
+            + ezyvector.selectedVectorCollectionId
+            + '/segments?limit=12'
+            + queryString,
+        type: 'GET',
+        dataType: 'json'
+    })
+    .done(function(data) {
+        $('#collectionSegmentCountText').text(data.count);
+        $('#totalCollectionSegmentText').text(data.total);
+        ezyvector.lastCollectionSegmentPageToken = data.pageToken || {};
+        $('#collectionSegmentListBody').html(
+            ezyvector.buildCollectionSegmentListBodyHtml(data.items || [])
+        );
+        ezyvector.decorateCollectionSegmentPaginationButtons(data);
+    })
+    .fail(function(e) {
+        ezyadmin.processGetApiErrors(e);
+    });
+}
+
+ezyvector.decorateCollectionSegmentPaginationButtons = function(data) {
+    if (data.continuation && data.continuation.hasNext) {
+        $('#collectionSegmentNextPageButton').removeClass('text-secondary');
+        $('#collectionSegmentLastPageButton').removeClass('text-secondary');
+    } else {
+        $('#collectionSegmentNextPageButton').addClass('text-secondary');
+        $('#collectionSegmentLastPageButton').addClass('text-secondary');
+    }
+    if (data.continuation && data.continuation.hasPrevious) {
+        $('#collectionSegmentPrevPageButton').removeClass('text-secondary');
+        $('#collectionSegmentFirstPageButton').removeClass('text-secondary');
+    } else {
+        $('#collectionSegmentPrevPageButton').addClass('text-secondary');
+        $('#collectionSegmentFirstPageButton').addClass('text-secondary');
+    }
+}
+
+ezyvector.buildCollectionSegmentListBodyHtml = function(collectionSegments) {
+    var html = '';
+    collectionSegments.forEach((collectionSegment) => {
+        html += ezyvector.buildCollectionSegmentListItemHtml(collectionSegment);
+    });
+    return html;
+}
+
+ezyvector.formatCollectionSegmentStatus = function(status) {
+    if (!status) {
+        return '';
+    }
+    return `
+        <span class="${ezyadmin.getTextColorByStatus(status)}">
+            ${ezyadmin.getI18nMessage(status.toLowerCase())}
+        </span>
+        `;
+}
+
+ezyvector.formatNullableNumber = function(value) {
+    return value == null ? '' : value;
+}
+
+ezyvector.buildCollectionSegmentListItemHtml = function(collectionSegment) {
+    return `
+        <tr>
+            <td class="text-center">${collectionSegment.id}</td>
+            <td class="text-center">${collectionSegment.segmentNo}</td>
+            <td class="text-center">${ezyadmin.escapeHtml(collectionSegment.segmentType || '')}</td>
+            <td class="text-center">
+                ${ezyvector.formatCollectionSegmentStatus(collectionSegment.status)}
+            </td>
+            <td class="text-center">
+                ${ezyadmin.formatNumberWithCommas(collectionSegment.pointsCount || 0)}
+            </td>
+            <td class="text-center">${ezyvector.formatNullableNumber(collectionSegment.minPointId)}</td>
+            <td class="text-center">${ezyvector.formatNullableNumber(collectionSegment.maxPointId)}</td>
+            <td class="text-center">${collectionSegment.indexVersion}</td>
+            <td class="text-center">${ezyadmin.formatTimeStamp(collectionSegment.createdAt)}</td>
+            <td class="text-center">${ezyadmin.formatTimeStamp(collectionSegment.updatedAt)}</td>
+        </tr>
+        `;
+}
+
+ezyvector.fetchCollectionSegmentList();
+</script>
+</body>
+</html>

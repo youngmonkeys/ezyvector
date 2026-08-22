@@ -22,12 +22,22 @@ import org.youngmonkeys.ezyplatform.exception.ResourceNotFoundException;
 import org.youngmonkeys.ezyplatform.model.PaginationModel;
 import org.youngmonkeys.ezyvector.admin.controller.decorator.AdminEzyVectorCollectionModelDecorator;
 import org.youngmonkeys.ezyvector.admin.pagination.AdminEzyVectorCollectionPaginationParameterConverter;
+import org.youngmonkeys.ezyvector.admin.pagination.AdminEzyVectorCollectionPointPaginationParameterConverter;
+import org.youngmonkeys.ezyvector.admin.pagination.AdminEzyVectorCollectionSegmentPaginationParameterConverter;
 import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionDetailsResponse;
+import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionPointResponse;
 import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionResponse;
+import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionSegmentResponse;
 import org.youngmonkeys.ezyvector.admin.service.AdminEzyVectorCollectionService;
 import org.youngmonkeys.ezyvector.admin.service.AdminPaginationEzyVectorCollectionService;
+import org.youngmonkeys.ezyvector.admin.service.AdminPaginationEzyVectorCollectionPointService;
+import org.youngmonkeys.ezyvector.admin.service.AdminPaginationEzyVectorCollectionSegmentService;
 import org.youngmonkeys.ezyvector.model.EzyVectorCollectionModel;
+import org.youngmonkeys.ezyvector.model.EzyVectorCollectionPointModel;
+import org.youngmonkeys.ezyvector.model.EzyVectorCollectionSegmentModel;
 import org.youngmonkeys.ezyvector.pagination.EzyVectorCollectionFilter;
+import org.youngmonkeys.ezyvector.pagination.EzyVectorCollectionPointFilter;
+import org.youngmonkeys.ezyvector.pagination.EzyVectorCollectionSegmentFilter;
 
 import static org.youngmonkeys.ezyplatform.pagination.PaginationModelFetchers.getPaginationModelBySortOrder;
 
@@ -38,8 +48,16 @@ public class AdminEzyVectorCollectionControllerService {
     private final AdminEzyVectorCollectionService vectorCollectionService;
     private final AdminEzyVectorCollectionModelDecorator vectorCollectionModelDecorator;
     private final AdminPaginationEzyVectorCollectionService paginationVectorCollectionService;
+    private final AdminPaginationEzyVectorCollectionPointService
+        paginationVectorCollectionPointService;
+    private final AdminPaginationEzyVectorCollectionSegmentService
+        paginationVectorCollectionSegmentService;
     private final AdminEzyVectorCollectionPaginationParameterConverter
         paginationParameterConverter;
+    private final AdminEzyVectorCollectionPointPaginationParameterConverter
+        pointPaginationParameterConverter;
+    private final AdminEzyVectorCollectionSegmentPaginationParameterConverter
+        segmentPaginationParameterConverter;
 
     public AdminEzyVectorCollectionDetailsResponse getVectorCollectionById(
         long collectionId
@@ -74,5 +92,53 @@ public class AdminEzyVectorCollectionControllerService {
             );
         return vectorCollectionModelDecorator
             .decorateToVectorCollectionPaginationResponse(pagination);
+    }
+
+    @SuppressWarnings("LineLength")
+    public PaginationModel<AdminEzyVectorCollectionPointResponse> getVectorCollectionPoints(
+        EzyVectorCollectionPointFilter filter,
+        String sortOrder,
+        String nextPageToken,
+        String prevPageToken,
+        boolean lastPage,
+        int limit
+    ) {
+        PaginationModel<EzyVectorCollectionPointModel> pagination =
+            getPaginationModelBySortOrder(
+                paginationVectorCollectionPointService,
+                pointPaginationParameterConverter,
+                filter,
+                sortOrder,
+                nextPageToken,
+                prevPageToken,
+                lastPage,
+                limit
+            );
+        return vectorCollectionModelDecorator
+            .decorateToVectorCollectionPointPaginationResponse(pagination);
+    }
+
+    @SuppressWarnings("LineLength")
+    public PaginationModel<AdminEzyVectorCollectionSegmentResponse> getVectorCollectionSegments(
+        EzyVectorCollectionSegmentFilter filter,
+        String sortOrder,
+        String nextPageToken,
+        String prevPageToken,
+        boolean lastPage,
+        int limit
+    ) {
+        PaginationModel<EzyVectorCollectionSegmentModel> pagination =
+            getPaginationModelBySortOrder(
+                paginationVectorCollectionSegmentService,
+                segmentPaginationParameterConverter,
+                filter,
+                sortOrder,
+                nextPageToken,
+                prevPageToken,
+                lastPage,
+                limit
+            );
+        return vectorCollectionModelDecorator
+            .decorateToVectorCollectionSegmentPaginationResponse(pagination);
     }
 }

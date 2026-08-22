@@ -22,13 +22,18 @@ import com.tvd12.ezyhttp.server.core.annotation.Api;
 import com.tvd12.ezyhttp.server.core.annotation.Authenticated;
 import com.tvd12.ezyhttp.server.core.annotation.Controller;
 import com.tvd12.ezyhttp.server.core.annotation.DoGet;
+import com.tvd12.ezyhttp.server.core.annotation.PathVariable;
 import com.tvd12.ezyhttp.server.core.annotation.RequestParam;
 import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyplatform.admin.validator.AdminCommonValidator;
 import org.youngmonkeys.ezyplatform.model.PaginationModel;
 import org.youngmonkeys.ezyvector.admin.controller.service.AdminEzyVectorCollectionControllerService;
+import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionPointResponse;
 import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionResponse;
+import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionSegmentResponse;
 import org.youngmonkeys.ezyvector.pagination.DefaultEzyVectorCollectionFilter;
+import org.youngmonkeys.ezyvector.pagination.DefaultEzyVectorCollectionPointFilter;
+import org.youngmonkeys.ezyvector.pagination.DefaultEzyVectorCollectionSegmentFilter;
 
 import static org.youngmonkeys.ezyplatform.util.StringConverters.trimOrNull;
 
@@ -39,7 +44,8 @@ import static org.youngmonkeys.ezyplatform.util.StringConverters.trimOrNull;
 @AllArgsConstructor
 public class AdminApiVectorCollectionController {
 
-    private final AdminEzyVectorCollectionControllerService vectorCollectionControllerService;
+    private final AdminEzyVectorCollectionControllerService
+        vectorCollectionControllerService;
     private final AdminCommonValidator commonValidator;
 
     @Description("Get the data chunks with pagination")
@@ -57,6 +63,59 @@ public class AdminApiVectorCollectionController {
         return vectorCollectionControllerService.getVectorCollections(
             DefaultEzyVectorCollectionFilter.builder()
                 .likeKeyword(trimOrNull(keyword))
+                .status(trimOrNull(status))
+                .build(),
+            sortOrder,
+            nextPageToken,
+            prevPageToken,
+            lastPage,
+            limit
+        );
+    }
+
+    @SuppressWarnings("LineLength")
+    @Description("Get the vector collection points with pagination")
+    @DoGet("/vector-collections/{collectionId}/points")
+    public PaginationModel<AdminEzyVectorCollectionPointResponse> vectorCollectionPointsGet(
+        @PathVariable long collectionId,
+        @RequestParam(value = "status") String status,
+        @RequestParam(value = "sortOrder") String sortOrder,
+        @RequestParam(value = "nextPageToken") String nextPageToken,
+        @RequestParam(value = "prevPageToken") String prevPageToken,
+        @RequestParam(value = "lastPage") boolean lastPage,
+        @RequestParam(value = "limit", defaultValue = "30") int limit
+    ) {
+        commonValidator.validatePageSize(limit);
+        return vectorCollectionControllerService.getVectorCollectionPoints(
+            DefaultEzyVectorCollectionPointFilter.builder()
+                .collectionId(collectionId)
+                .status(trimOrNull(status))
+                .build(),
+            sortOrder,
+            nextPageToken,
+            prevPageToken,
+            lastPage,
+            limit
+        );
+    }
+
+    @SuppressWarnings("LineLength")
+    @Description("Get the vector collection segments with pagination")
+    @DoGet("/vector-collections/{collectionId}/segments")
+    public PaginationModel<AdminEzyVectorCollectionSegmentResponse> vectorCollectionSegmentsGet(
+        @PathVariable long collectionId,
+        @RequestParam(value = "status") String status,
+        @RequestParam(value = "sortOrder") String sortOrder,
+        @RequestParam(value = "nextPageToken") String nextPageToken,
+        @RequestParam(value = "prevPageToken") String prevPageToken,
+        @RequestParam(value = "lastPage") boolean lastPage,
+        @RequestParam(value = "limit", defaultValue = "30") int limit
+    ) {
+        commonValidator.validatePageSize(limit);
+        return vectorCollectionControllerService.getVectorCollectionSegments(
+            DefaultEzyVectorCollectionSegmentFilter.builder()
+                .collectionId(collectionId)
+                .status(trimOrNull(status))
                 .build(),
             sortOrder,
             nextPageToken,

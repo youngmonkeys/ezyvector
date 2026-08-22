@@ -28,6 +28,7 @@ public class DefaultEzyVectorCollectionFilter implements EzyVectorCollectionFilt
     public final Collection<String> keywords;
     public final String likeKeyword;
     public final String keywordPrefix;
+    public final String status;
 
     @Override
     public void decorateQueryStringBeforeWhere(
@@ -50,11 +51,11 @@ public class DefaultEzyVectorCollectionFilter implements EzyVectorCollectionFilt
                 answer.and("k.keyword IN :keywords");
             }
         }
+        if (status != null) {
+            answer.and("e.status = :status");
+        }
         if (likeKeyword != null) {
-            answer.and(
-                "(e.name LIKE CONCAT('%',:likeKeyword,'%') " +
-                    "OR e.displayName LIKE CONCAT('%',:likeKeyword,'%'))"
-            );
+            answer.and("e.name LIKE CONCAT('%',:likeKeyword,'%')");
         }
         return answer.build();
     }

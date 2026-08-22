@@ -21,8 +21,12 @@ import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyplatform.model.PaginationModel;
 import org.youngmonkeys.ezyvector.admin.converter.AdminEzyVectorModelToResponseConverter;
 import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionDetailsResponse;
+import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionPointResponse;
 import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionResponse;
+import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionSegmentResponse;
 import org.youngmonkeys.ezyvector.model.EzyVectorCollectionModel;
+import org.youngmonkeys.ezyvector.model.EzyVectorCollectionPointModel;
+import org.youngmonkeys.ezyvector.model.EzyVectorCollectionSegmentModel;
 
 @EzySingleton
 @AllArgsConstructor
@@ -36,6 +40,24 @@ public class AdminEzyVectorCollectionModelDecorator {
     ) {
         return pagination.map(
             modelToResponseConverter::toVectorCollectionResponse
+        );
+    }
+
+    @SuppressWarnings("LineLength")
+    public PaginationModel<AdminEzyVectorCollectionPointResponse> decorateToVectorCollectionPointPaginationResponse(
+        PaginationModel<EzyVectorCollectionPointModel> pagination
+    ) {
+        return pagination.map(
+            modelToResponseConverter::toVectorCollectionPointResponse
+        );
+    }
+
+    @SuppressWarnings("LineLength")
+    public PaginationModel<AdminEzyVectorCollectionSegmentResponse> decorateToVectorCollectionSegmentPaginationResponse(
+        PaginationModel<EzyVectorCollectionSegmentModel> pagination
+    ) {
+        return pagination.map(
+            modelToResponseConverter::toVectorCollectionSegmentResponse
         );
     }
 

@@ -25,9 +25,10 @@ import java.util.Collection;
 @Getter
 @Builder
 public class DefaultEzyVectorCollectionPointFilter implements EzyVectorCollectionPointFilter {
+    public final long collectionId;
     public final Collection<String> keywords;
-    public final String likeKeyword;
     public final String keywordPrefix;
+    public final String status;
 
     @Override
     public void decorateQueryStringBeforeWhere(
@@ -41,6 +42,12 @@ public class DefaultEzyVectorCollectionPointFilter implements EzyVectorCollectio
     @Override
     public String matchingCondition() {
         EzyQueryConditionBuilder answer = new EzyQueryConditionBuilder();
+        if (collectionId > 0) {
+            answer.and("e.collectionId = :collectionId");
+        }
+        if (status != null) {
+            answer.and("e.status = :status");
+        }
         if (keywordPrefix != null || keywords != null) {
             answer.and("k.dataType = 'ezyvector_collection_points'");
             if (keywordPrefix != null) {
@@ -49,12 +56,6 @@ public class DefaultEzyVectorCollectionPointFilter implements EzyVectorCollectio
             if (keywords != null) {
                 answer.and("k.keyword IN :keywords");
             }
-        }
-        if (likeKeyword != null) {
-            answer.and(
-                "(e.name LIKE CONCAT('%',:likeKeyword,'%') " +
-                    "OR e.displayName LIKE CONCAT('%',:likeKeyword,'%'))"
-            );
         }
         return answer.build();
     }

@@ -1,0 +1,229 @@
+<!--
+ ~ Copyright 2026 youngmonkeys.org
+ ~
+ ~ Licensed under the ezyplatform, Version 1.0.0 (the "License");
+ ~ you may not use this file except in compliance with the License.
+ ~ You may obtain a copy of the License at
+ ~
+ ~     https://youngmonkeys.org/licenses/ezyplatform-1.0.0.txt
+ ~
+ ~ Unless required by applicable law or agreed to in writing, software
+ ~ distributed under the License is distributed on an "AS IS" BASIS,
+ ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ~ See the License for the specific language governing permissions and
+ ~ limitations under the License.
+-->
+
+<html
+        lang="en"
+        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="content">
+    <div class="col-12">
+        <div class="row">
+            <div class="col-lg-6 col-md-4"></div>
+            <div class="col-lg-3 col-md-4 page-search">
+                <label for="collectionPointStatusSelect" class="text-nowrap">
+                    [[#{status}]]:
+                </label>
+                <select id="collectionPointStatusSelect" class="form-control"
+                        onchange="ezyvector.onCollectionPointFilterChanged();">
+                    <option value="">[[#{all}]]</option>
+                    <option th:each="status : ${vectorCollectionPointStatuses}"
+                            th:value="${status}"
+                            th:text="${#messages.msg(#strings.toLowerCase(status))}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-4 page-search">
+                <label for="collectionPointSortOrderSelect" class="text-nowrap">
+                    [[#{sort_order}]]:
+                </label>
+                <select id="collectionPointSortOrderSelect" class="form-control"
+                        onchange="ezyvector.onCollectionPointFilterChanged();">
+                    <option value="ID_DESC">[[#{newest}]]</option>
+                    <option value="ID_ASC">[[#{oldest}]]</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body table-responsive p-0">
+                <table class="table table-bordered table-hover text-nowrap align-middle-cells">
+                    <thead>
+                    <tr>
+                        <th class="text-center">[[#{id}]]</th>
+                        <th class="text-center">[[#{point_id}]]</th>
+                        <th class="text-center">[[#{vector_size}]]</th>
+                        <th>[[#{payload}]]</th>
+                        <th class="text-center">[[#{status}]]</th>
+                        <th class="text-center">[[#{version}]]</th>
+                        <th class="text-center">[[#{created_at}]]</th>
+                        <th class="text-center">[[#{updated_at}]]</th>
+                    </tr>
+                    </thead>
+                    <tbody id="collectionPointListBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer clearfix">
+                <span><span id="collectionPointCountText">0</span>
+                    [[${#strings.toLowerCase(#messages.msg('of'))}]]
+                    <span id="totalCollectionPointText">0</span>
+                    [[${#strings.toLowerCase(#messages.msg('collection_points'))}]]
+                </span>
+                <ul class="pagination pagination-sm m-0 float-right">
+                    <li class="page-item">
+                        <a class="page-link cursor-pointer" id="collectionPointFirstPageButton"
+                           onclick="ezyvector.fetchCollectionPointList('first');">
+                            <i class="fas fa-arrow-circle-left pl-1 pr-1"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link cursor-pointer" id="collectionPointPrevPageButton"
+                           onclick="ezyvector.fetchCollectionPointList('prev');">[[#{prev}]]</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link cursor-pointer" id="collectionPointNextPageButton"
+                           onclick="ezyvector.fetchCollectionPointList('next');">[[#{next}]]</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link cursor-pointer" id="collectionPointLastPageButton"
+                           onclick="ezyvector.fetchCollectionPointList('last');">
+                            <i class="fas fa-arrow-circle-right pl-1 pr-1"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</th:block>
+<script th:fragment="scripts">
+ezyvector.lastCollectionPointPageToken = {};
+
+ezyvector.onCollectionPointFilterChanged = function() {
+    ezyvector.fetchCollectionPointList('first');
+}
+
+ezyvector.buildCollectionPointFilterQueryString = function() {
+    var queryString = '';
+    var status = $('#collectionPointStatusSelect').val();
+    var sortOrder = $('#collectionPointSortOrderSelect').val();
+    if (status) {
+        queryString += '&status=' + encodeURIComponent(status);
+    }
+    if (sortOrder) {
+        queryString += '&sortOrder=' + encodeURIComponent(sortOrder);
+    }
+    return queryString;
+}
+
+ezyvector.fetchCollectionPointList = function(action) {
+    var queryString = ezyvector.buildCollectionPointFilterQueryString();
+    if (action === 'next') {
+        if (ezyvector.lastCollectionPointPageToken.next) {
+            queryString += '&nextPageToken='
+                + encodeURIComponent(ezyvector.lastCollectionPointPageToken.next);
+        } else {
+            return;
+        }
+    } else if (action === 'prev') {
+        if (ezyvector.lastCollectionPointPageToken.prev) {
+            queryString += '&prevPageToken='
+                + encodeURIComponent(ezyvector.lastCollectionPointPageToken.prev);
+        } else {
+            return;
+        }
+    } else if (action === 'last') {
+        queryString += '&lastPage=true';
+    }
+    $.ajax({
+        url: '/ezyvector/api/v1/vector-collections/'
+            + ezyvector.selectedVectorCollectionId
+            + '/points?limit=12'
+            + queryString,
+        type: 'GET',
+        dataType: 'json'
+    })
+    .done(function(data) {
+        $('#collectionPointCountText').text(data.count);
+        $('#totalCollectionPointText').text(data.total);
+        ezyvector.lastCollectionPointPageToken = data.pageToken || {};
+        $('#collectionPointListBody').html(
+            ezyvector.buildCollectionPointListBodyHtml(data.items || [])
+        );
+        ezyvector.decorateCollectionPointPaginationButtons(data);
+    })
+    .fail(function(e) {
+        ezyadmin.processGetApiErrors(e);
+    });
+}
+
+ezyvector.decorateCollectionPointPaginationButtons = function(data) {
+    if (data.continuation && data.continuation.hasNext) {
+        $('#collectionPointNextPageButton').removeClass('text-secondary');
+        $('#collectionPointLastPageButton').removeClass('text-secondary');
+    } else {
+        $('#collectionPointNextPageButton').addClass('text-secondary');
+        $('#collectionPointLastPageButton').addClass('text-secondary');
+    }
+    if (data.continuation && data.continuation.hasPrevious) {
+        $('#collectionPointPrevPageButton').removeClass('text-secondary');
+        $('#collectionPointFirstPageButton').removeClass('text-secondary');
+    } else {
+        $('#collectionPointPrevPageButton').addClass('text-secondary');
+        $('#collectionPointFirstPageButton').addClass('text-secondary');
+    }
+}
+
+ezyvector.buildCollectionPointListBodyHtml = function(collectionPoints) {
+    var html = '';
+    collectionPoints.forEach((collectionPoint) => {
+        html += ezyvector.buildCollectionPointListItemHtml(collectionPoint);
+    });
+    return html;
+}
+
+ezyvector.formatCollectionPointStatus = function(status) {
+    if (!status) {
+        return '';
+    }
+    return `
+        <span class="${ezyadmin.getTextColorByStatus(status)}">
+            ${ezyadmin.getI18nMessage(status.toLowerCase())}
+        </span>
+        `;
+}
+
+ezyvector.formatCollectionPointPayload = function(payload) {
+    if (!payload) {
+        return '';
+    }
+    return ezyadmin.escapeHtml(ezyadmin.truncateString(payload, 180, '...'));
+}
+
+ezyvector.buildCollectionPointListItemHtml = function(collectionPoint) {
+    return `
+        <tr>
+            <td class="text-center">${collectionPoint.id}</td>
+            <td class="text-center">${collectionPoint.pointId}</td>
+            <td class="text-center">${collectionPoint.vectorSize}</td>
+            <td class="text-wrap" style="min-width: 240px; max-width: 520px;">
+                ${ezyvector.formatCollectionPointPayload(collectionPoint.payload)}
+            </td>
+            <td class="text-center">
+                ${ezyvector.formatCollectionPointStatus(collectionPoint.status)}
+            </td>
+            <td class="text-center">${collectionPoint.version}</td>
+            <td class="text-center">${ezyadmin.formatTimeStamp(collectionPoint.createdAt)}</td>
+            <td class="text-center">${ezyadmin.formatTimeStamp(collectionPoint.updatedAt)}</td>
+        </tr>
+        `;
+}
+
+ezyvector.fetchCollectionPointList();
+</script>
+</body>
+</html>

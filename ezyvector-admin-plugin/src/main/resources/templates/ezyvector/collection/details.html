@@ -58,11 +58,29 @@
     <div class="col-12">
         <pre class="p-3 bg-light border rounded text-wrap">[[${vectorCollection.config}]]</pre>
     </div>
+    <div class="col-12">
+        <hr class="mb-4" />
+    </div>
+    <div class="col-12">
+        <h3>[[#{collection_segments}]]</h3>
+    </div>
+    <th:block th:replace="~{ezyvector/collection/collection-segment-list :: content}" />
+    <div class="col-12">
+        <hr class="mb-4" />
+    </div>
+    <div class="col-12">
+        <h3>[[#{collection_points}]]</h3>
+    </div>
+    <th:block th:replace="~{ezyvector/collection/collection-point-list :: content}" />
 </div>
 <script layout:fragment="scripts" th:inline="javascript">
 /*<![CDATA[*/
 ezyvector.selectedVectorCollectionId = /*[[${vectorCollection.id}]]*/ '';
 /*]]>*/
 </script>
+<th:block layout:fragment="post-scripts">
+    <th:block th:replace="~{ezyvector/collection/collection-segment-list :: scripts}" />
+    <th:block th:replace="~{ezyvector/collection/collection-point-list :: scripts}" />
+</th:block>
 </body>
 </html>

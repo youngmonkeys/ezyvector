@@ -18,8 +18,12 @@ package org.youngmonkeys.ezyvector.admin.converter;
 
 import com.tvd12.ezyfox.bean.annotation.EzySingleton;
 import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionDetailsResponse;
+import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionPointResponse;
 import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionResponse;
+import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionSegmentResponse;
 import org.youngmonkeys.ezyvector.model.EzyVectorCollectionModel;
+import org.youngmonkeys.ezyvector.model.EzyVectorCollectionPointModel;
+import org.youngmonkeys.ezyvector.model.EzyVectorCollectionSegmentModel;
 
 @EzySingleton
 public class AdminEzyVectorModelToResponseConverter {
@@ -53,6 +57,44 @@ public class AdminEzyVectorModelToResponseConverter {
             .status(model.getStatus())
             .pointsCount(model.getPointsCount())
             .config(model.getConfig())
+            .createdAt(model.getCreatedAt())
+            .updatedAt(model.getUpdatedAt())
+            .build();
+    }
+
+    public AdminEzyVectorCollectionPointResponse toVectorCollectionPointResponse(
+        EzyVectorCollectionPointModel model
+    ) {
+        return AdminEzyVectorCollectionPointResponse.builder()
+            .id(model.getId())
+            .collectionId(model.getCollectionId())
+            .pointId(model.getPointId())
+            .vectorSize(
+                model.getVector() != null
+                    ? model.getVector().length
+                    : 0
+            )
+            .payload(model.getPayload())
+            .status(model.getStatus())
+            .version(model.getVersion())
+            .createdAt(model.getCreatedAt())
+            .updatedAt(model.getUpdatedAt())
+            .build();
+    }
+
+    public AdminEzyVectorCollectionSegmentResponse toVectorCollectionSegmentResponse(
+        EzyVectorCollectionSegmentModel model
+    ) {
+        return AdminEzyVectorCollectionSegmentResponse.builder()
+            .id(model.getId())
+            .collectionId(model.getCollectionId())
+            .segmentNo(model.getSegmentNo())
+            .segmentType(model.getSegmentType())
+            .status(model.getStatus())
+            .pointsCount(model.getPointsCount())
+            .minPointId(model.getMinPointId())
+            .maxPointId(model.getMaxPointId())
+            .indexVersion(model.getIndexVersion())
             .createdAt(model.getCreatedAt())
             .updatedAt(model.getUpdatedAt())
             .build();
