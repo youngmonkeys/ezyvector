@@ -14,15 +14,14 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.admin.test;
+package org.youngmonkeys.ezyvector.test;
 
-import org.youngmonkeys.devtools.UnitTestClassGenerator;
+import org.youngmonkeys.devtools.repository.RepositoryClassesGenerator;
 
-public class UnitTestGenerator {
+public class EzyVectorRepositoryClassesGenerator {
 
-    public static void main(String[] args) {
-        new UnitTestClassGenerator(
-            Object.class
-        ).printContent();
+    public static void main(String[] args) throws Exception {
+        new RepositoryClassesGenerator(Object.class)
+            .generate();
     }
 }

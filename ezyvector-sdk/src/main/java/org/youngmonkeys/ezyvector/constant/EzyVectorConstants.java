@@ -18,7 +18,15 @@ package org.youngmonkeys.ezyvector.constant;
 
 public final class EzyVectorConstants {
 
+    public static final int EXPLORATION_FACTOR_SEARCH_MULTIPLIER = 8;
+
+    public static final int MIN_EXPLORATION_FACTOR_SEARCH = 64;
+
+    public static final long FIRST_SEGMENT_NO = 1L;
+    public static final long FIRST_VERSION = 1L;
+
     public static final String DEFAULT_VECTOR_DATA_DIR = "data/ezyvector";
+
     public static final String SETTING_NAME_VECTOR_DATA_DIR =
         "ezyrag_vector_data_dir";
 

@@ -14,19 +14,15 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.admin.test;
+package org.youngmonkeys.ezyvector.admin.test.test;
 
-import com.tvd12.ezyfox.tool.EzySameObjectScriptCreator;
+import org.youngmonkeys.devtools.UnitTestClassGenerator;
 
-public class ConvertScriptGenerator {
+public class UnitTestGenerator {
 
     public static void main(String[] args) {
-        String script = new EzySameObjectScriptCreator()
-            .originClass(Object.class)
-            .originObjectName("model")
-            .targetClass(Object.class)
-            .targetObjectName("response")
-            .generateBuildFuncScript();
-        System.out.println(script);
+        new UnitTestClassGenerator(
+            Object.class
+        ).printContent();
     }
 }

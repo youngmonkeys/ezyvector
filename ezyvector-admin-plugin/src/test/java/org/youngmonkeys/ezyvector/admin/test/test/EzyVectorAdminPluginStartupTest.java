@@ -14,7 +14,7 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.admin.test;
+package org.youngmonkeys.ezyvector.admin.test.test;
 
 import com.tvd12.ezyhttp.server.boot.EzyHttpApplicationBootstrap;
 import com.tvd12.ezyhttp.server.core.annotation.ComponentsScan;
@@ -34,9 +34,9 @@ import com.tvd12.ezyhttp.server.core.annotation.PropertiesSources;
     "org.youngmonkeys.ecommerce",
     "org.youngmonkeys.ezymail"
 })
-public class ezyvectorAdminPluginStartupTest {
+public class EzyVectorAdminPluginStartupTest {
 
     public static void main(String[] args) throws Exception {
-        EzyHttpApplicationBootstrap.start(ezyvectorAdminPluginStartupTest.class);
+        EzyHttpApplicationBootstrap.start(EzyVectorAdminPluginStartupTest.class);
     }
 }

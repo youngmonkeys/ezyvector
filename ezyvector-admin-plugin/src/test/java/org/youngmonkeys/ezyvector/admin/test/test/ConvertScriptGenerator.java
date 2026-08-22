@@ -14,12 +14,19 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.web.repo;
+package org.youngmonkeys.ezyvector.admin.test.test;
 
-import com.tvd12.ezydata.database.EzyDatabaseRepository;
-import com.tvd12.ezyfox.database.annotation.EzyRepository;
+import com.tvd12.ezyfox.tool.EzySameObjectScriptCreator;
 
-@EzyRepository
-public interface WebRagDataChunkRepository extends
-    RagDataChunkRepository,
-    EzyDatabaseRepository<Long, RagDataChunk> {}
+public class ConvertScriptGenerator {
+
+    public static void main(String[] args) {
+        String script = new EzySameObjectScriptCreator()
+            .originClass(Object.class)
+            .originObjectName("model")
+            .targetClass(Object.class)
+            .targetObjectName("response")
+            .generateBuildFuncScript();
+        System.out.println(script);
+    }
+}

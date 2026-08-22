@@ -25,16 +25,19 @@ import com.tvd12.ezyhttp.server.core.annotation.DoPut;
 import com.tvd12.ezyhttp.server.core.annotation.PathVariable;
 import com.tvd12.ezyhttp.server.core.annotation.RequestBody;
 import lombok.AllArgsConstructor;
-import org.youngmonkeys.ezyvector.model.SaveVectorPointModel;
 import org.youngmonkeys.ezyvector.model.EzyVectorSearchResultModel;
+import org.youngmonkeys.ezyvector.model.SaveVectorPointModel;
+import org.youngmonkeys.ezyvector.web.converter.WebEzyVectorRequestToModelConverter;
+import org.youngmonkeys.ezyvector.web.request.WebCreateVectorCollectionRequest;
+import org.youngmonkeys.ezyvector.web.request.WebEzyVectorSearchRequest;
 import org.youngmonkeys.ezyvector.web.service.WebEzyVectorService;
+import org.youngmonkeys.ezyvector.web.validator.WebEzyVectorCollectionValidator;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.singletonMap;
-import static org.youngmonkeys.ezyplatform.util.Numbers.toIntOrZeroFromObject;
 import static org.youngmonkeys.ezyplatform.util.Numbers.toLongOrZeroFromObject;
 
 @Controller("/collections")
@@ -42,13 +45,21 @@ import static org.youngmonkeys.ezyplatform.util.Numbers.toLongOrZeroFromObject;
 public class WebApiEzyVectorCollectionController {
 
     private final WebEzyVectorService vectorDatabaseService;
+    private final WebEzyVectorCollectionValidator vectorCollectionValidator;
+    private final WebEzyVectorRequestToModelConverter vectorRequestToModelConverter;
 
     @DoPut("/{collectionName}")
     public Map<String, Object> collectionNamePut(
         @PathVariable String collectionName,
-        @RequestBody Map<String, Object> request
+        @RequestBody WebCreateVectorCollectionRequest request
     ) throws Exception {
-        vectorDatabaseService.createCollectionIfAbsent();
+        vectorCollectionValidator.validate(request);
+        vectorDatabaseService.createCollectionIfAbsent(
+            collectionName,
+            vectorRequestToModelConverter.toSaveVectorCollectionModel(
+                request
+            )
+        );
         return okResult(true);
     }
 
@@ -56,7 +67,6 @@ public class WebApiEzyVectorCollectionController {
     public Map<String, Object> collectionNameGet(
         @PathVariable String collectionName
     ) {
-        checkCollectionName(collectionName);
         return okResult(
             EzyMapBuilder.mapBuilder()
                 .put(
@@ -85,10 +95,12 @@ public class WebApiEzyVectorCollectionController {
         @PathVariable String collectionName,
         @RequestBody Map<String, Object> request
     ) throws Exception {
-        checkCollectionName(collectionName);
         List<Map<String, Object>> points =
             (List<Map<String, Object>>) request.get("points");
-        vectorDatabaseService.upsert(toPointModels(points));
+        vectorDatabaseService.upsert(
+            collectionName,
+            toPointModels(points)
+        );
         return okResult(true);
     }
 
@@ -96,24 +108,15 @@ public class WebApiEzyVectorCollectionController {
     @DoPost("/{collectionName}/points/search")
     public Map<String, Object> collectionNamePointsSearchPost(
         @PathVariable String collectionName,
-        @RequestBody Map<String, Object> request
+        @RequestBody WebEzyVectorSearchRequest request
     ) throws Exception {
         checkCollectionName(collectionName);
-        float[] vector = toVector((List<Object>) request.get("vector"));
-        int limit = toIntOrZeroFromObject(request.get("limit"));
         List<EzyVectorSearchResultModel> results = vectorDatabaseService.search(
-            vector,
-            limit > 0 ? limit : 10
+            collectionName,
+            request.getVector(),
+            request.getLimit()
         );
         return okResult(toResultMaps(results));
-    }
-
-    private void checkCollectionName(String collectionName) {
-        if (!vectorDatabaseService.getCollectionName().equals(collectionName)) {
-            throw new HttpNotFoundException(
-                singletonMap("collection", "notFound")
-            );
-        }
     }
 
     @SuppressWarnings("unchecked")

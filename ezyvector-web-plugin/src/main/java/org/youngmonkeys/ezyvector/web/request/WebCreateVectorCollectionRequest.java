@@ -5,9 +5,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CreateVectorCollectionRequest {
-    private long vectorSize;
-
+public class WebCreateVectorCollectionRequest {
+    private Vectors vectors;
     @Getter
     @Setter
     public static class Vectors {

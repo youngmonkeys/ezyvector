@@ -17,10 +17,27 @@
 package org.youngmonkeys.ezyvector.repo;
 
 import com.tvd12.ezydata.database.EzyDatabaseRepository;
+import com.tvd12.ezyfox.database.annotation.EzyQuery;
+import org.youngmonkeys.ezyplatform.result.IdResult;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollection;
+import org.youngmonkeys.ezyvector.result.EzyVectorCollectionVectorSizeResult;
 
 public interface RagCollectionRepository
     extends EzyDatabaseRepository<Long, EzyVectorCollection> {
 
     EzyVectorCollection findByName(String name);
+
+    @EzyQuery(
+        "SELECT e.id FROM EzyVectorCollection e " +
+            "WHERE e.name = ?0"
+    )
+    IdResult findIdByName(String name);
+
+    @EzyQuery(
+        "SELECT e.id, e.vectorSize FROM EzyVectorCollection e " +
+            "WHERE e.name = ?0"
+    )
+    EzyVectorCollectionVectorSizeResult findVectorSizeByName(
+        String name
+    );
 }

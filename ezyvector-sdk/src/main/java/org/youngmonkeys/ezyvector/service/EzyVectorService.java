@@ -20,6 +20,7 @@ import com.tvd12.ezyfox.util.EzyLoggable;
 import com.tvd12.ezyfox.util.EzyNext;
 import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyplatform.manager.FileSystemManager;
+import org.youngmonkeys.ezyplatform.result.IdResult;
 import org.youngmonkeys.ezyvector.converter.EzyVectorEntityToModelConverter;
 import org.youngmonkeys.ezyvector.converter.EzyVectorModelToEntityConverter;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollection;
@@ -27,20 +28,26 @@ import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPoint;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegment;
 import org.youngmonkeys.ezyvector.hnsw.HnswIndex;
 import org.youngmonkeys.ezyvector.model.EzyVectorCollectionModel;
+import org.youngmonkeys.ezyvector.model.EzyVectorSearchResultModel;
 import org.youngmonkeys.ezyvector.model.SaveVectorCollectionModel;
 import org.youngmonkeys.ezyvector.model.SaveVectorPointModel;
-import org.youngmonkeys.ezyvector.model.EzyVectorSearchResultModel;
 import org.youngmonkeys.ezyvector.repo.RagCollectionPointRepository;
 import org.youngmonkeys.ezyvector.repo.RagCollectionRepository;
 import org.youngmonkeys.ezyvector.repo.RagCollectionSegmentRepository;
+import org.youngmonkeys.ezyvector.result.EzyVectorCollectionVectorSizeResult;
 import org.youngmonkeys.ezyvector.storage.EzyVectorFileStorage;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static org.youngmonkeys.ezyplatform.constant.CommonConstants.LIMIT_500_RECORDS;
+import static org.youngmonkeys.ezyplatform.constant.CommonConstants.ZERO_LONG;
+import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.EXPLORATION_FACTOR_SEARCH_MULTIPLIER;
+import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.FIRST_SEGMENT_NO;
+import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.MIN_EXPLORATION_FACTOR_SEARCH;
 
 @AllArgsConstructor
 public class EzyVectorService extends EzyLoggable {
@@ -82,14 +89,19 @@ public class EzyVectorService extends EzyLoggable {
     }
 
     public void upsert(
+        String collectionName,
         List<SaveVectorPointModel> points
     ) throws Exception {
-        EzyVectorCollection collection = getCollectionOrThrow();
-        ensureMutableSegment(collection);
-        startBackfillIfNecessary(collection);
-        startHnswBuildIfNecessary(collection);
-        EzyVectorFileStorage storage = newVectorFileStorage();
+        EzyVectorCollectionVectorSizeResult collection =
+            getVectorSizeResultEntityByNameOrThrow(
+                collectionName
+            );
         long collectionId = collection.getId();
+        long vectorSize = collection.getVectorSize();
+        ensureMutableSegment(collectionId);
+        startBackfillIfNecessary(collectionId, vectorSize);
+        startHnswBuildIfNecessary(collectionId);
+        EzyVectorFileStorage storage = newVectorFileStorage();
         synchronized (writeLock) {
             List<EzyVectorFileStorage.VectorRecord> records =
                 new ArrayList<>(points.size());
@@ -125,39 +137,48 @@ public class EzyVectorService extends EzyLoggable {
                 collection.getVectorSize(),
                 records
             );
-            updateHnswIndex(collection, records);
+            updateHnswIndex(collectionId, records);
         }
-        startHnswBuildIfNecessary(collection);
+        startHnswBuildIfNecessary(collectionId);
     }
 
     public List<EzyVectorSearchResultModel> search(
+        String collectionName,
         float[] vector,
         int limit
     ) throws Exception {
-        EzyVectorCollection collection = getCollectionOrThrow();
-        startBackfillIfNecessary(collection);
-        startHnswBuildIfNecessary(collection);
-        HnswIndex hnswIndex = getReadyHnswIndex(collection);
+        EzyVectorCollectionVectorSizeResult collection =
+            getVectorSizeResultEntityByNameOrThrow(
+                collectionName
+            );
+        long collectionId = collection.getId();
+        long vectorSize = collection.getVectorSize();
+        startBackfillIfNecessary(collectionId, vectorSize);
+        startHnswBuildIfNecessary(collectionId);
+        HnswIndex hnswIndex = getReadyHnswIndex(collectionId);
         if (hnswIndex != null) {
             List<HnswIndex.SearchResult> hits = hnswIndex.search(
                 vector,
                 limit,
-                Math.max(limit * 8, 64)
+                Math.max(
+                    limit * EXPLORATION_FACTOR_SEARCH_MULTIPLIER,
+                    MIN_EXPLORATION_FACTOR_SEARCH
+                )
             );
-            return toSearchResults(collection, hits);
+            return toSearchResults(collectionId, hits);
         }
         List<EzyVectorFileStorage.SearchResult> hits =
             newVectorFileStorage().search(
-                collection.getId(),
+                collectionId,
                 collection.getVectorSize(),
                 vector,
                 limit
             );
-        return toExactSearchResults(collection, hits);
+        return toExactSearchResults(collectionId, hits);
     }
 
     private List<EzyVectorSearchResultModel> toSearchResults(
-        EzyVectorCollection collection,
+        long collectionId,
         List<HnswIndex.SearchResult> hits
     ) throws Exception {
         List<EzyVectorSearchResultModel> results =
@@ -165,34 +186,7 @@ public class EzyVectorService extends EzyLoggable {
         for (HnswIndex.SearchResult hit : hits) {
             EzyVectorCollectionPoint point = collectionPointRepository
                 .findByCollectionIdAndPointId(
-                    collection.getId(),
-                    hit.getId()
-                );
-            results.add(
-                EzyVectorSearchResultModel.builder()
-                    .chunkId(hit.getId())
-                    .score(hit.getScore())
-                    .payload(
-                        point == null
-                            ? null
-                            : toPayloadMap(point.getPayload())
-                    )
-                    .build()
-            );
-        }
-        return results;
-    }
-
-    private List<EzyVectorSearchResultModel> toExactSearchResults(
-        EzyVectorCollection collection,
-        List<EzyVectorFileStorage.SearchResult> hits
-    ) throws Exception {
-        List<EzyVectorSearchResultModel> results =
-            new ArrayList<>(hits.size());
-        for (EzyVectorFileStorage.SearchResult hit : hits) {
-            EzyVectorCollectionPoint point = collectionPointRepository
-                .findByCollectionIdAndPointId(
-                    collection.getId(),
+                    collectionId,
                     hit.getId()
                 );
             results.add(
@@ -205,11 +199,33 @@ public class EzyVectorService extends EzyLoggable {
         return results;
     }
 
-    private EzyVectorCollection getCollectionOrThrow(
+    private List<EzyVectorSearchResultModel> toExactSearchResults(
+        long collectionId,
+        List<EzyVectorFileStorage.SearchResult> hits
+    ) throws Exception {
+        List<EzyVectorSearchResultModel> results =
+            new ArrayList<>(hits.size());
+        for (EzyVectorFileStorage.SearchResult hit : hits) {
+            EzyVectorCollectionPoint point = collectionPointRepository
+                .findByCollectionIdAndPointId(
+                    collectionId,
+                    hit.getId()
+                );
+            results.add(
+                entityToModelConverter.toSearchResultModel(
+                    hit,
+                    point
+                )
+            );
+        }
+        return results;
+    }
+
+    private EzyVectorCollectionVectorSizeResult getVectorSizeResultEntityByNameOrThrow(
         String collectionName
     ) {
-        EzyVectorCollection collection = collectionRepository
-            .findByName(collectionName);
+        EzyVectorCollectionVectorSizeResult collection = collectionRepository
+            .findVectorSizeByName(collectionName);
         if (collection == null) {
             throw new IllegalStateException(
                 "You need to setup MySQL vector database first"
@@ -221,78 +237,84 @@ public class EzyVectorService extends EzyLoggable {
     private void ensureMutableSegment(
         String collectionName
     ) {
-        EzyVectorCollection collection = collectionRepository
-            .findByName(collectionName);
+        IdResult collection = collectionRepository
+            .findIdByName(collectionName);
         if (collection != null) {
-            ensureMutableSegment(collection);
+            ensureMutableSegment(collection.getId());
         }
     }
 
     private void ensureMutableSegment(
-        EzyVectorCollection collection
+        long collectionId
     ) {
-        EzyVectorCollectionSegment segment = collectionSegmentRepository
-            .findByCollectionIdAndSegmentNo(collection.getId(), 1L);
+        EzyVectorCollectionSegment segment =
+            collectionSegmentRepository
+                .findByCollectionIdAndSegmentNo(
+                    collectionId,
+                    FIRST_SEGMENT_NO
+                );
         if (segment != null) {
             return;
         }
-        segment = new EzyVectorCollectionSegment();
-        segment.setCollectionId(collection.getId());
-        segment.setSegmentNo(1L);
-        segment.setSegmentType("MUTABLE");
-        segment.setStatus("ACTIVE");
-        segment.setIndexVersion(1L);
-        LocalDateTime now = LocalDateTime.now();
-        segment.setCreatedAt(now);
-        segment.setUpdatedAt(now);
+        segment = modelToEntityConverter
+            .toVectorCollectionSegment(collectionId);
         collectionSegmentRepository.save(segment);
     }
 
     private void startBackfillIfNecessary(
         String collectionName
     ) throws Exception {
-        EzyVectorCollection collection = collectionRepository
-            .findByName(collectionName);
+        EzyVectorCollectionVectorSizeResult collection =
+            collectionRepository
+                .findVectorSizeByName(collectionName);
         if (collection != null) {
-            startBackfillIfNecessary(collection);
+            startBackfillIfNecessary(
+                collection.getId(),
+                collection.getVectorSize()
+            );
         }
     }
 
     private void startBackfillIfNecessary(
-        EzyVectorCollection collection
+        long collectionId,
+        long vectorSize
     ) throws Exception {
         EzyVectorFileStorage storage = newVectorFileStorage();
         long backfillProgress =
-            storage.getBackfillProgress(collection.getId());
+            storage.getBackfillProgress(collectionId);
         List<EzyVectorCollectionPoint> points = collectionPointRepository
             .findListByCollectionIdAndIdGreaterThan(
-                collection.getId(),
+                collectionId,
                 backfillProgress,
                 EzyNext.fromLimit(1)
             );
         if (points.isEmpty()
-            || !backfillingCollectionIds.add(collection.getId())) {
+            || !backfillingCollectionIds.add(collectionId)) {
             return;
         }
         Thread thread = new Thread(
-            () -> backfillCollection(collection),
-            "ezyvector-vector-backfill-" + collection.getId()
+            () -> backfillCollection(collectionId, vectorSize),
+            "ezyvector-vector-backfill-" + collectionId
         );
         thread.setDaemon(true);
         thread.start();
     }
 
-    private void backfillCollection(EzyVectorCollection collection) {
+    private void backfillCollection(
+        long collectionId,
+        long vectorSize
+    ) {
         try {
             EzyVectorFileStorage storage = newVectorFileStorage();
-            long lastId = storage.getBackfillProgress(collection.getId());
+            long lastId = storage.getBackfillProgress(collectionId);
             while (true) {
-                List<EzyVectorCollectionPoint> points = collectionPointRepository
-                    .findListByCollectionIdAndIdGreaterThan(
-                        collection.getId(),
-                        lastId,
-                        EzyNext.fromLimit(500)
-                    );
+                List<EzyVectorCollectionPoint> points =
+                    collectionPointRepository
+                        .findListByCollectionIdAndIdGreaterThan(
+                            collectionId,
+                            lastId,
+                            EzyNext.fromLimit(LIMIT_500_RECORDS)
+                        );
                 if (points.isEmpty()) {
                     return;
                 }
@@ -310,38 +332,37 @@ public class EzyVectorService extends EzyLoggable {
                         lastId = point.getId();
                     }
                     storage.upsertAll(
-                        collection.getId(),
-                        collection.getVectorSize(),
+                        collectionId,
+                        vectorSize,
                         records
                     );
                 }
-                storage.saveBackfillProgress(collection.getId(), lastId);
+                storage.saveBackfillProgress(collectionId, lastId);
             }
         } catch (Exception e) {
             logger.warn(
                 "backfill vector collection: {} failed",
-                collection.getId(),
+                collectionId,
                 e
             );
         } finally {
-            backfillingCollectionIds.remove(collection.getId());
+            backfillingCollectionIds.remove(collectionId);
         }
     }
 
     private void startHnswBuildIfNecessary(
         String collectionName
-    ) throws Exception {
-        EzyVectorCollection collection = collectionRepository
-            .findByName(collectionName);
+    ) {
+        IdResult collection = collectionRepository
+            .findIdByName(collectionName);
         if (collection != null) {
-            startHnswBuildIfNecessary(collection);
+            startHnswBuildIfNecessary(collection.getId());
         }
     }
 
     private void startHnswBuildIfNecessary(
-        EzyVectorCollection collection
+        long collectionId
     ) {
-        long collectionId = collection.getId();
         if (readyHnswCollectionIds.contains(collectionId)) {
             return;
         }
@@ -367,7 +388,7 @@ public class EzyVectorService extends EzyLoggable {
         }
         hnswIndexByCollectionId.put(collectionId, new HnswIndex());
         Thread thread = new Thread(
-            () -> buildHnswIndex(collection),
+            () -> buildHnswIndex(collectionId),
             "ezyvector-vector-hnsw-build-" + collectionId
         );
         thread.setDaemon(true);
@@ -375,9 +396,8 @@ public class EzyVectorService extends EzyLoggable {
     }
 
     private HnswIndex getReadyHnswIndex(
-        EzyVectorCollection collection
+        long collectionId
     ) {
-        long collectionId = collection.getId();
         if (!readyHnswCollectionIds.contains(collectionId)) {
             return null;
         }
@@ -400,42 +420,48 @@ public class EzyVectorService extends EzyLoggable {
                 collectionId,
                 e
             );
-            startHnswBuildIfNecessary(collection);
+            startHnswBuildIfNecessary(collectionId);
             return null;
         }
     }
 
     private void updateHnswIndex(
-        EzyVectorCollection collection,
+        long collectionId,
         List<EzyVectorFileStorage.VectorRecord> records
     ) throws Exception {
-        HnswIndex index = hnswIndexByCollectionId.get(collection.getId());
+        HnswIndex index = hnswIndexByCollectionId.get(collectionId);
         if (index == null) {
             return;
         }
         for (EzyVectorFileStorage.VectorRecord record : records) {
             index.insert(record.getPointId(), record.getVector());
         }
-        if (readyHnswCollectionIds.contains(collection.getId())) {
-            index.save(newVectorFileStorage().getHnswPath(collection.getId()));
+        if (readyHnswCollectionIds.contains(collectionId)) {
+            index
+                .save(newVectorFileStorage()
+                .getHnswPath(collectionId));
         }
     }
 
-    private void buildHnswIndex(EzyVectorCollection collection) {
+    private void buildHnswIndex(long collectionId) {
         try {
-            HnswIndex index = hnswIndexByCollectionId.get(collection.getId());
+            HnswIndex index = hnswIndexByCollectionId
+                .get(collectionId);
             if (index == null) {
                 index = new HnswIndex();
-                hnswIndexByCollectionId.put(collection.getId(), index);
+                hnswIndexByCollectionId.put(collectionId, index);
             }
-            long lastId = 0L;
+            long lastId = ZERO_LONG;
             while (true) {
-                List<EzyVectorCollectionPoint> points = collectionPointRepository
-                    .findListByCollectionIdAndIdGreaterThan(
-                        collection.getId(),
-                        lastId,
-                        EzyNext.fromLimit(500)
-                    );
+                List<EzyVectorCollectionPoint> points =
+                    collectionPointRepository
+                        .findListByCollectionIdAndIdGreaterThan(
+                            collectionId,
+                            lastId,
+                            EzyNext.fromLimit(
+                                LIMIT_500_RECORDS
+                            )
+                        );
                 if (points.isEmpty()) {
                     break;
                 }
@@ -444,16 +470,18 @@ public class EzyVectorService extends EzyLoggable {
                     lastId = point.getId();
                 }
             }
-            index.save(newVectorFileStorage().getHnswPath(collection.getId()));
-            readyHnswCollectionIds.add(collection.getId());
+            index
+                .save(newVectorFileStorage()
+                .getHnswPath(collectionId));
+            readyHnswCollectionIds.add(collectionId);
         } catch (Exception e) {
             logger.warn(
                 "build hnsw index for vector collection: {} failed",
-                collection.getId(),
+                collectionId,
                 e
             );
         } finally {
-            buildingHnswCollectionIds.remove(collection.getId());
+            buildingHnswCollectionIds.remove(collectionId);
         }
     }
 

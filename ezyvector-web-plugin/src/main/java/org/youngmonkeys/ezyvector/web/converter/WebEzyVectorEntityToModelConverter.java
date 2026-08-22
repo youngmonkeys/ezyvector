@@ -16,6 +16,7 @@
 
 package org.youngmonkeys.ezyvector.web.converter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tvd12.ezyfox.bean.annotation.EzySingleton;
 import org.youngmonkeys.ezyplatform.time.ClockProxy;
 import org.youngmonkeys.ezyvector.converter.EzyVectorEntityToModelConverter;
@@ -24,9 +25,13 @@ import org.youngmonkeys.ezyvector.converter.EzyVectorEntityToModelConverter;
 public class WebEzyVectorEntityToModelConverter
     extends EzyVectorEntityToModelConverter {
 
-    public WebezyvectorEntityToModelConverter(
-        ClockProxy clock
+    public WebEzyVectorEntityToModelConverter(
+        ClockProxy clock,
+        ObjectMapper objectMapper
     ) {
-        super(clock);
+        super(
+            clock,
+            objectMapper
+        );
     }
 }

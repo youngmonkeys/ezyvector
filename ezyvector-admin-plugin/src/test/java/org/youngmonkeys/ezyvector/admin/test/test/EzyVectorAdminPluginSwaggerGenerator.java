@@ -14,14 +14,23 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.test;
+package org.youngmonkeys.ezyvector.admin.test.test;
 
-import org.youngmonkeys.devtools.repository.RepositoryClassesGenerator;
+import org.youngmonkeys.devtools.swagger.SwaggerGenerator;
 
-public class ezyvectorRepositoryClassesGenerator {
+import java.io.File;
+
+public class EzyVectorAdminPluginSwaggerGenerator {
 
     public static void main(String[] args) throws Exception {
-        new RepositoryClassesGenerator(Object.class)
-            .generate();
+        SwaggerGenerator swaggerGenerator = new SwaggerGenerator(
+            "org.youngmonkeys.ezyvector.admin.controller"
+        );
+        String filePath = "src/test/resources/static/files/swagger.yaml";
+        File srcFolder = new File("src");
+        if (!srcFolder.exists()) {
+            filePath = "ezyvector-admin-plugin/" + filePath;
+        }
+        swaggerGenerator.generateToFile(filePath);
     }
 }

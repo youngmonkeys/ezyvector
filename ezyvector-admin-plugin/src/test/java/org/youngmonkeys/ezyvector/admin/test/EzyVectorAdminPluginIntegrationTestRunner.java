@@ -14,15 +14,24 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.test;
+package org.youngmonkeys.ezyvector.admin.test;
 
-import com.tvd12.ezyfox.util.EzyLoggable;
-import org.testng.annotations.Test;
+import com.tvd12.ezyhttp.server.core.annotation.ComponentsScan;
+import com.tvd12.ezyhttp.server.core.annotation.PropertiesSources;
+import org.youngmonkeys.ezyplatform.test.IntegrationTestRunner;
 
-public class ezyvectorTest extends EzyLoggable {
+@PropertiesSources({
+    "config.properties",
+})
+@ComponentsScan({
+    "org.youngmonkeys.ezyplatform",
+    "org.youngmonkeys.ezyvector"
+})
+public class EzyVectorAdminPluginIntegrationTestRunner {
 
-    @Test
-    public void test() {
-        logger.info("just test");
+    public static void main(String[] args) throws Exception {
+        IntegrationTestRunner.run(
+            EzyVectorAdminPluginIntegrationTestRunner.class
+        );
     }
 }

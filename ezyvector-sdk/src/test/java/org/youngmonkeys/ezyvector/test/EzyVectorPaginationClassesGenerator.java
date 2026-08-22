@@ -18,10 +18,10 @@ package org.youngmonkeys.ezyvector.test;
 
 import org.youngmonkeys.devtools.pagination.PaginationClassesGenerator;
 
-public class ezyvectorPaginationClassesGenerator {
+public class EzyVectorPaginationClassesGenerator {
 
     public static void main(String[] args) throws Exception {
-        new PaginationClassesGenerator(RagDataChunk.class)
+        new PaginationClassesGenerator(Object.class)
             .generate();
     }
 }

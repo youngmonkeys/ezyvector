@@ -22,12 +22,18 @@ import org.youngmonkeys.ezyplatform.time.ClockProxy;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollection;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPoint;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPointStatus;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegment;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegmentStatus;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegmentType;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionStatus;
 import org.youngmonkeys.ezyvector.model.SaveVectorCollectionModel;
 import org.youngmonkeys.ezyvector.model.SaveVectorPointModel;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+
+import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.FIRST_SEGMENT_NO;
+import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.FIRST_VERSION;
 
 @AllArgsConstructor
 public class EzyVectorModelToEntityConverter {
@@ -53,7 +59,8 @@ public class EzyVectorModelToEntityConverter {
         LocalDateTime now = clock.nowDateTime();
         entity.setCreatedAt(now);
         entity.setUpdatedAt(now);
-    };
+        return entity;
+    }
 
     public EzyVectorCollectionPoint toVectorCollectionPointEntity(
         long collectionId,
@@ -79,6 +86,26 @@ public class EzyVectorModelToEntityConverter {
         entity.setVector(point.getVector());
         entity.setPayload(toPayloadJson(point.getPayload()));
         entity.setUpdatedAt(clock.nowDateTime());
+    }
+
+    public EzyVectorCollectionSegment toVectorCollectionSegment(
+        long collectionId
+    ) {
+        EzyVectorCollectionSegment segment =
+            new EzyVectorCollectionSegment();
+        segment.setCollectionId(collectionId);
+        segment.setSegmentNo(FIRST_SEGMENT_NO);
+        segment.setSegmentType(
+            EzyVectorCollectionSegmentType.MUTABLE.toString()
+        );
+        segment.setStatus(
+            EzyVectorCollectionSegmentStatus.ACTIVE.toString()
+        );
+        segment.setIndexVersion(FIRST_VERSION);
+        LocalDateTime now = clock.nowDateTime();
+        segment.setCreatedAt(now);
+        segment.setUpdatedAt(now);
+        return segment;
     }
 
     public String toPayloadJson(

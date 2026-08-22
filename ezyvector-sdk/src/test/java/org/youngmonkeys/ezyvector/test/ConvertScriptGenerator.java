@@ -22,9 +22,9 @@ public class ConvertScriptGenerator {
 
     public static void main(String[] args) {
         String script = new EzySameObjectScriptCreator()
-            .originClass(RagDataChunk.class)
+            .originClass(Object.class)
             .originObjectName("entity")
-            .targetClass(RagDataChunkModel.class)
+            .targetClass(Object.class)
             .targetObjectName("model")
             .generateBuildFuncScript();
         System.out.println(script);
