@@ -27,7 +27,6 @@ import org.youngmonkeys.ezyvector.entity.EzyVectorCollection;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPoint;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegment;
 import org.youngmonkeys.ezyvector.hnsw.HnswIndex;
-import org.youngmonkeys.ezyvector.model.EzyVectorCollectionModel;
 import org.youngmonkeys.ezyvector.model.EzyVectorSearchResultModel;
 import org.youngmonkeys.ezyvector.model.SaveVectorCollectionModel;
 import org.youngmonkeys.ezyvector.model.SaveVectorPointModel;
@@ -69,7 +68,7 @@ public class EzyVectorService extends EzyLoggable {
     private final Set<Long> buildingHnswCollectionIds =
         ConcurrentHashMap.newKeySet();
 
-    public EzyVectorCollectionModel createCollectionIfAbsent(
+    public void createCollectionIfAbsent(
         String collectionName,
         SaveVectorCollectionModel model
     ) throws Exception {
@@ -83,9 +82,6 @@ public class EzyVectorService extends EzyLoggable {
         ensureMutableSegment(collectionName);
         startBackfillIfNecessary(collectionName);
         startHnswBuildIfNecessary(collectionName);
-        return EzyVectorCollectionModel.builder()
-            .vectorSize(entity.getVectorSize())
-            .build();
     }
 
     public void upsert(

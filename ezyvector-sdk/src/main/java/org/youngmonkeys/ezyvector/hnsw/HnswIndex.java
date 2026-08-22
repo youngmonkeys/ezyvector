@@ -115,8 +115,13 @@ public class HnswIndex {
             }
             int topLayer = Math.min(level, maxLevel);
             for (int lc = topLayer; lc >= 0; --lc) {
-                List<Candidate> candidates =
-                    searchLayer(normalized, curr, efConstruction, lc, false);
+                List<Candidate> candidates = searchLayer(
+                    normalized,
+                    curr,
+                    efConstruction,
+                    lc,
+                    false
+                );
                 int neighborLimit = lc == 0 ? maxM0 : maxM;
                 List<Candidate> selected = candidates.size() > neighborLimit
                     ? candidates.subList(0, neighborLimit)
@@ -162,7 +167,11 @@ public class HnswIndex {
         }
     }
 
-    public List<SearchResult> search(float[] queryVector, int k, int ef) {
+    public List<SearchResult> search(
+        float[] queryVector,
+        int k,
+        int ef
+    ) {
         validateVector(queryVector);
         if (k <= 0) {
             return Collections.emptyList();
@@ -197,13 +206,20 @@ public class HnswIndex {
                     }
                 }
             }
-            List<Candidate> candidates =
-                searchLayer(normalized, curr, Math.max(ef, k), 0, true);
+            List<Candidate> candidates = searchLayer(
+                normalized,
+                curr,
+                Math.max(ef, k),
+                0,
+                true
+            );
             List<SearchResult> results =
                 new ArrayList<>(Math.min(k, candidates.size()));
             for (int i = 0; i < candidates.size() && results.size() < k; ++i) {
                 Candidate c = candidates.get(i);
-                results.add(new SearchResult(c.id, 1f - c.dist));
+                results.add(
+                    new SearchResult(c.id, 1f - c.dist)
+                );
             }
             return results;
         } finally {
@@ -395,11 +411,20 @@ public class HnswIndex {
         int layer,
         boolean excludeDeleted
     ) {
+        if (ef <= 0) {
+            throw new IllegalArgumentException(
+                "ef must be positive"
+            );
+        }
         Set<Long> visited = new HashSet<>();
         PriorityQueue<Candidate> candidateQueue =
-            new PriorityQueue<>(Comparator.comparingDouble(c -> c.dist));
+            new PriorityQueue<>(
+                Comparator.comparingDouble(c -> c.dist)
+            );
         PriorityQueue<Candidate> resultQueue =
-            new PriorityQueue<>((a, b) -> Float.compare(b.dist, a.dist));
+            new PriorityQueue<>((a, b) ->
+                Float.compare(b.dist, a.dist)
+            );
 
         float entryDist = distance(target, entry.vector);
         Candidate entryCandidate = new Candidate(entry.id, entryDist);
@@ -429,7 +454,9 @@ public class HnswIndex {
                     continue;
                 }
                 float d = distance(target, neighborNode.vector);
-                if (resultQueue.size() < ef || d < resultQueue.peek().dist) {
+                if (resultQueue.size() < ef
+                    || d < resultQueue.peek().dist
+                ) {
                     Candidate candidate = new Candidate(neighborId, d);
                     candidateQueue.add(candidate);
                     if (!excludeDeleted || !neighborNode.deleted) {
@@ -442,7 +469,9 @@ public class HnswIndex {
             }
         }
         List<Candidate> result = new ArrayList<>(resultQueue);
-        result.sort(Comparator.comparingDouble(c -> c.dist));
+        result.sort(
+            Comparator.comparingDouble(c -> c.dist)
+        );
         return result;
     }
 
@@ -452,7 +481,9 @@ public class HnswIndex {
         if (neighbors.size() <= limit) {
             return;
         }
-        List<Candidate> candidates = new ArrayList<>(neighbors.size());
+        List<Candidate> candidates = new ArrayList<>(
+            neighbors.size()
+        );
         for (long neighborId : neighbors) {
             Node neighbor = nodesById.get(neighborId);
             if (neighbor != null) {
@@ -464,7 +495,9 @@ public class HnswIndex {
                 );
             }
         }
-        candidates.sort(Comparator.comparingDouble(c -> c.dist));
+        candidates.sort(
+            Comparator.comparingDouble(c -> c.dist)
+        );
         List<Long> kept = new ArrayList<>(limit);
         for (int i = 0; i < Math.min(limit, candidates.size()); ++i) {
             kept.add(candidates.get(i).id);
@@ -547,7 +580,9 @@ public class HnswIndex {
             this.id = id;
             this.vector = vector;
             this.level = level;
-            this.neighborsByLevel = new ArrayList<>(level + 1);
+            this.neighborsByLevel = new ArrayList<>(
+                level + 1
+            );
             for (int i = 0; i <= level; ++i) {
                 neighborsByLevel.add(new ArrayList<>());
             }
@@ -564,7 +599,9 @@ public class HnswIndex {
                 return;
             }
             List<Long> list = neighbors(layer);
-            if (layer < neighborsByLevel.size() && !list.contains(neighborId)) {
+            if (layer < neighborsByLevel.size()
+                && !list.contains(neighborId)
+            ) {
                 list.add(neighborId);
             }
         }
