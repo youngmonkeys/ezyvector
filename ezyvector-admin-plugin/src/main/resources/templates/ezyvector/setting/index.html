@@ -60,6 +60,10 @@
                                class="form-control" th:placeholder="#{vector_collections_api_key}"
                                th:value="${vectorCollectionsApiKey}"
                                autocomplete="new-password">
+                        <button type="button" class="btn btn-primary" id="copyVectorCollectionsApiKeyButton" tabindex="-1"
+                                th:attr="onclick=|ezyadmin.copyToClipboard('vectorCollectionsApiKey', true, '#{vector_collections_api_key}')|">
+                            <i class="fas fa-copy"></i>
+                        </button>
                         <button type="button" class="btn btn-info" id="showVectorCollectionsApiKeyButton" tabindex="-1"
                                 onclick="ezyadmin.togglePasswordVisible('vectorCollectionsApiKey', 'showVectorCollectionsApiKeyButton', 'hideVectorCollectionsApiKeyButton')">
                             <i class="fas fa-eye"></i>
