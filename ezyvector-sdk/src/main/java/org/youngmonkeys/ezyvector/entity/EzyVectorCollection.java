@@ -39,7 +39,7 @@ import static org.youngmonkeys.ezyvector.constant.EzyVectorTableNames.TABLE_NAME
 @Table(name = TABLE_NAME_COLLECTION)
 @AllArgsConstructor
 @NoArgsConstructor
-public class RagCollection {
+public class EzyVectorCollection {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;

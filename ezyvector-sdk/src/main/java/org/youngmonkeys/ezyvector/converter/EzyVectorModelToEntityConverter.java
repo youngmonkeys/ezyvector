@@ -16,12 +16,76 @@
 
 package org.youngmonkeys.ezyvector.converter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyplatform.time.ClockProxy;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollection;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPoint;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPointStatus;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionStatus;
+import org.youngmonkeys.ezyvector.model.SaveVectorCollectionModel;
+import org.youngmonkeys.ezyvector.model.SaveVectorPointModel;
+
+import java.time.LocalDateTime;
+import java.util.Map;
 
 @AllArgsConstructor
 public class EzyVectorModelToEntityConverter {
 
     private final ClockProxy clock;
+    private final ObjectMapper objectMapper;
 
+
+    public EzyVectorCollection toVectorCollectionEntity(
+        String collectionName,
+        SaveVectorCollectionModel model
+    ) {
+        SaveVectorCollectionModel.Vectors vectors
+            = model.getVectors();
+        EzyVectorCollection entity = new EzyVectorCollection();
+        entity.setName(collectionName);
+        entity.setVectorSize(vectors.getSize());
+        entity.setDistance(vectors.getDistance());
+        entity.setIndexType("HNSW");
+        entity.setStatus(
+            EzyVectorCollectionStatus.ACTIVATED.toString()
+        );
+        LocalDateTime now = clock.nowDateTime();
+        entity.setCreatedAt(now);
+        entity.setUpdatedAt(now);
+    };
+
+    public EzyVectorCollectionPoint toVectorCollectionPointEntity(
+        long collectionId,
+        SaveVectorPointModel point
+    ) throws Exception {
+        EzyVectorCollectionPoint entity =
+            new EzyVectorCollectionPoint();
+        entity.setCollectionId(collectionId);
+        entity.setPointId(point.getId());
+        entity.setStatus(
+            EzyVectorCollectionPointStatus.LIVE.toString()
+        );
+        mergeToCollectionPointEntity(point, entity);
+        entity.setCreatedAt(entity.getUpdatedAt());
+        return entity;
+    }
+
+    public void mergeToCollectionPointEntity(
+        SaveVectorPointModel point,
+        EzyVectorCollectionPoint entity
+    ) throws Exception {
+        entity.setVersion(entity.getVersion() + 1L);
+        entity.setVector(point.getVector());
+        entity.setPayload(toPayloadJson(point.getPayload()));
+        entity.setUpdatedAt(clock.nowDateTime());
+    }
+
+    public String toPayloadJson(
+        Map<String, Object> payload
+    ) throws Exception {
+        return payload == null
+            ? null
+            : objectMapper.writeValueAsString(payload);
+    }
 }

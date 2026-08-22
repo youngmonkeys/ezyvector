@@ -19,14 +19,14 @@ package org.youngmonkeys.ezyvector.repo;
 import com.tvd12.ezydata.database.EzyDatabaseRepository;
 import com.tvd12.ezyfox.database.annotation.EzyQuery;
 import com.tvd12.ezyfox.util.EzyNext;
-import org.youngmonkeys.ezyvector.entity.RagCollectionPoint;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPoint;
 
 import java.util.List;
 
 public interface RagCollectionPointRepository
-    extends EzyDatabaseRepository<Long, RagCollectionPoint> {
+    extends EzyDatabaseRepository<Long, EzyVectorCollectionPoint> {
 
-    RagCollectionPoint findByCollectionIdAndPointId(
+    EzyVectorCollectionPoint findByCollectionIdAndPointId(
         long collectionId,
         long pointId
     );
@@ -36,7 +36,7 @@ public interface RagCollectionPointRepository
             "WHERE e.collectionId = ?0 AND e.id > ?1 " +
             "ORDER BY e.id ASC"
     )
-    List<RagCollectionPoint> findListByCollectionIdAndIdGreaterThan(
+    List<EzyVectorCollectionPoint> findListByCollectionIdAndIdGreaterThan(
         long collectionId,
         long id,
         EzyNext next

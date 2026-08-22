@@ -16,11 +16,44 @@
 
 package org.youngmonkeys.ezyvector.converter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyplatform.time.ClockProxy;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPoint;
+import org.youngmonkeys.ezyvector.model.EzyVectorSearchResultModel;
+import org.youngmonkeys.ezyvector.storage.EzyVectorFileStorage;
+
+import java.util.Map;
+
+import static com.tvd12.ezyfox.io.EzyStrings.isBlank;
 
 @AllArgsConstructor
 public class EzyVectorEntityToModelConverter {
 
     private final ClockProxy clock;
+    private final ObjectMapper objectMapper;
+
+    public EzyVectorSearchResultModel toSearchResultModel(
+        EzyVectorFileStorage.SearchResult hit,
+        EzyVectorCollectionPoint entity
+    ) throws Exception {
+        return EzyVectorSearchResultModel.builder()
+            .chunkId(hit.getId())
+            .score(hit.getScore())
+            .payload(
+                entity == null
+                    ? null
+                    : toPayloadMap(entity.getPayload())
+            )
+            .build();
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> toPayloadMap(
+        String json
+    ) throws Exception {
+        return isBlank(json)
+            ? null
+            : objectMapper.readValue(json, Map.class);
+    }
 }

@@ -5,6 +5,6 @@ import lombok.Getter;
 
 @Builder
 @Getter
-public class CreateVectorCollectionResultModel {
+public class EzyVectorCollectionModel {
     private long vectorSize;
 }

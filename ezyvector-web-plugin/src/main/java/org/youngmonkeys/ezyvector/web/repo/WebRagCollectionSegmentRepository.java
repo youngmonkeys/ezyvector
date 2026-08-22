@@ -18,10 +18,10 @@ package org.youngmonkeys.ezyvector.web.repo;
 
 import com.tvd12.ezydata.database.EzyDatabaseRepository;
 import com.tvd12.ezyfox.database.annotation.EzyRepository;
-import org.youngmonkeys.ezyvector.entity.RagCollectionSegment;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegment;
 import org.youngmonkeys.ezyvector.repo.RagCollectionSegmentRepository;
 
 @EzyRepository
 public interface WebRagCollectionSegmentRepository extends
     RagCollectionSegmentRepository,
-    EzyDatabaseRepository<Long, RagCollectionSegment> {}
+    EzyDatabaseRepository<Long, EzyVectorCollectionSegment> {}

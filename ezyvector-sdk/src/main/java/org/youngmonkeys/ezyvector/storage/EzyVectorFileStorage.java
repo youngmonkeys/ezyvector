@@ -16,6 +16,9 @@
 
 package org.youngmonkeys.ezyvector.storage;
 
+import lombok.Getter;
+import org.youngmonkeys.ezyplatform.manager.FileSystemManager;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -42,8 +45,14 @@ public class EzyVectorFileStorage {
 
     private final Path dataDir;
 
-    public EzyVectorFileStorage(String dataDir) {
-        this.dataDir = Paths.get(dataDir);
+    public EzyVectorFileStorage(
+        FileSystemManager fileSystemManager,
+        String dataDir
+    ) {
+        this.dataDir = Paths.get(
+            fileSystemManager.getEzyHomePathString(),
+            dataDir
+        );
     }
 
     public void upsert(
@@ -64,7 +73,7 @@ public class EzyVectorFileStorage {
 
     public void upsertAll(
         long collectionId,
-        int vectorSize,
+        long vectorSize,
         List<VectorRecord> records
     ) throws IOException {
         if (records.isEmpty()) {
@@ -109,7 +118,7 @@ public class EzyVectorFileStorage {
 
     public List<SearchResult> search(
         long collectionId,
-        int vectorSize,
+        long vectorSize,
         float[] query,
         int limit
     ) throws IOException {
@@ -233,7 +242,7 @@ public class EzyVectorFileStorage {
         FileChannel vectorChannel,
         FileChannel pointIdChannel,
         float[] normalizedQuery,
-        int vectorSize,
+        long vectorSize,
         long vectorByteSize,
         long slot,
         long chunkSlots,
@@ -277,7 +286,7 @@ public class EzyVectorFileStorage {
         ByteBuffer buffer,
         int offset,
         float[] normalizedQuery,
-        int vectorSize
+        long vectorSize
     ) {
         float score = 0f;
         for (int i = 0; i < vectorSize; ++i) {
@@ -329,7 +338,7 @@ public class EzyVectorFileStorage {
     }
 
     private static void validateVector(
-        int vectorSize,
+        long vectorSize,
         float[] vector
     ) {
         if (vector == null || vector.length != vectorSize) {
@@ -366,6 +375,7 @@ public class EzyVectorFileStorage {
         return answer;
     }
 
+    @Getter
     public static final class SearchResult {
         private final long id;
         private final float score;
@@ -374,16 +384,9 @@ public class EzyVectorFileStorage {
             this.id = id;
             this.score = score;
         }
-
-        public long getId() {
-            return id;
-        }
-
-        public float getScore() {
-            return score;
-        }
     }
 
+    @Getter
     public static final class VectorRecord {
         private final long slotId;
         private final long pointId;
@@ -397,18 +400,6 @@ public class EzyVectorFileStorage {
             this.slotId = slotId;
             this.pointId = pointId;
             this.vector = vector;
-        }
-
-        public long getSlotId() {
-            return slotId;
-        }
-
-        public long getPointId() {
-            return pointId;
-        }
-
-        public float[] getVector() {
-            return vector;
         }
     }
 }

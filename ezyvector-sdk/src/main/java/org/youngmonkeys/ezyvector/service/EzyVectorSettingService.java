@@ -18,6 +18,9 @@ package org.youngmonkeys.ezyvector.service;
 
 import org.youngmonkeys.ezyplatform.service.DefaultSettingService;
 
+import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.DEFAULT_VECTOR_DATA_DIR;
+import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.SETTING_NAME_VECTOR_DATA_DIR;
+
 public class EzyVectorSettingService {
 
     private final DefaultSettingService settingService;
@@ -26,5 +29,12 @@ public class EzyVectorSettingService {
         DefaultSettingService settingService
     ) {
         this.settingService = settingService;
+    }
+
+    public String getVectorDataDir() {
+        return settingService.getTextValue(
+            SETTING_NAME_VECTOR_DATA_DIR,
+            DEFAULT_VECTOR_DATA_DIR
+        );
     }
 }

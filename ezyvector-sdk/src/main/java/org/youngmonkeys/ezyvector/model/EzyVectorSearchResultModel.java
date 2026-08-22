@@ -23,8 +23,8 @@ import java.util.Map;
 
 @Getter
 @Builder
-public class VectorPointModel {
-    private final long id;
-    private final float[] vector;
+public class EzyVectorSearchResultModel {
+    private final long chunkId;
+    private final float score;
     private final Map<String, Object> payload;
 }

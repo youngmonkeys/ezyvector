@@ -17,10 +17,10 @@
 package org.youngmonkeys.ezyvector.repo;
 
 import com.tvd12.ezydata.database.EzyDatabaseRepository;
-import org.youngmonkeys.ezyvector.entity.RagCollection;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollection;
 
 public interface RagCollectionRepository
-    extends EzyDatabaseRepository<Long, RagCollection> {
+    extends EzyDatabaseRepository<Long, EzyVectorCollection> {
 
-    RagCollection findByName(String name);
+    EzyVectorCollection findByName(String name);
 }

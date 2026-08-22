@@ -25,8 +25,8 @@ import com.tvd12.ezyhttp.server.core.annotation.DoPut;
 import com.tvd12.ezyhttp.server.core.annotation.PathVariable;
 import com.tvd12.ezyhttp.server.core.annotation.RequestBody;
 import lombok.AllArgsConstructor;
-import org.youngmonkeys.ezyvector.model.VectorPointModel;
-import org.youngmonkeys.ezyvector.model.VectorSearchResultModel;
+import org.youngmonkeys.ezyvector.model.SaveVectorPointModel;
+import org.youngmonkeys.ezyvector.model.EzyVectorSearchResultModel;
 import org.youngmonkeys.ezyvector.web.service.WebEzyVectorService;
 
 import java.util.ArrayList;
@@ -101,7 +101,7 @@ public class WebApiEzyVectorCollectionController {
         checkCollectionName(collectionName);
         float[] vector = toVector((List<Object>) request.get("vector"));
         int limit = toIntOrZeroFromObject(request.get("limit"));
-        List<VectorSearchResultModel> results = vectorDatabaseService.search(
+        List<EzyVectorSearchResultModel> results = vectorDatabaseService.search(
             vector,
             limit > 0 ? limit : 10
         );
@@ -117,13 +117,13 @@ public class WebApiEzyVectorCollectionController {
     }
 
     @SuppressWarnings("unchecked")
-    private List<VectorPointModel> toPointModels(
+    private List<SaveVectorPointModel> toPointModels(
         List<Map<String, Object>> points
     ) {
-        List<VectorPointModel> models = new ArrayList<>(points.size());
+        List<SaveVectorPointModel> models = new ArrayList<>(points.size());
         for (Map<String, Object> point : points) {
             models.add(
-                VectorPointModel.builder()
+                SaveVectorPointModel.builder()
                     .id(toLongOrZeroFromObject(point.get("id")))
                     .vector(toVector((List<Object>) point.get("vector")))
                     .payload((Map<String, Object>) point.get("payload"))
@@ -134,10 +134,10 @@ public class WebApiEzyVectorCollectionController {
     }
 
     private List<Map<String, Object>> toResultMaps(
-        List<VectorSearchResultModel> results
+        List<EzyVectorSearchResultModel> results
     ) {
         List<Map<String, Object>> resultMaps = new ArrayList<>(results.size());
-        for (VectorSearchResultModel result : results) {
+        for (EzyVectorSearchResultModel result : results) {
             resultMaps.add(
                 EzyMapBuilder.mapBuilder()
                     .put("id", result.getChunkId())

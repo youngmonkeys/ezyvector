@@ -16,17 +16,20 @@
 
 package org.youngmonkeys.ezyvector.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tvd12.ezyfox.util.EzyLoggable;
 import com.tvd12.ezyfox.util.EzyNext;
-import org.youngmonkeys.ezyplatform.service.MutableSettingService;
-import org.youngmonkeys.ezyvector.entity.RagCollection;
-import org.youngmonkeys.ezyvector.entity.RagCollectionPoint;
-import org.youngmonkeys.ezyvector.entity.RagCollectionSegment;
+import lombok.AllArgsConstructor;
+import org.youngmonkeys.ezyplatform.manager.FileSystemManager;
+import org.youngmonkeys.ezyvector.converter.EzyVectorEntityToModelConverter;
+import org.youngmonkeys.ezyvector.converter.EzyVectorModelToEntityConverter;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollection;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPoint;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegment;
 import org.youngmonkeys.ezyvector.hnsw.HnswIndex;
-import org.youngmonkeys.ezyvector.model.CreateVectorCollectionResultModel;
-import org.youngmonkeys.ezyvector.model.VectorPointModel;
-import org.youngmonkeys.ezyvector.model.VectorSearchResultModel;
+import org.youngmonkeys.ezyvector.model.EzyVectorCollectionModel;
+import org.youngmonkeys.ezyvector.model.SaveVectorCollectionModel;
+import org.youngmonkeys.ezyvector.model.SaveVectorPointModel;
+import org.youngmonkeys.ezyvector.model.EzyVectorSearchResultModel;
 import org.youngmonkeys.ezyvector.repo.RagCollectionPointRepository;
 import org.youngmonkeys.ezyvector.repo.RagCollectionRepository;
 import org.youngmonkeys.ezyvector.repo.RagCollectionSegmentRepository;
@@ -39,21 +42,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.tvd12.ezyfox.io.EzyStrings.isBlank;
-import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.DEFAULT_MYSQL_COLLECTION_NAME;
-import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.DEFAULT_MYSQL_VECTOR_SIZE;
-import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.DEFAULT_VECTOR_DATA_DIR;
-import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.SETTING_NAME_MYSQL_COLLECTION_NAME;
-import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.SETTING_NAME_MYSQL_VECTOR_SIZE;
-import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.SETTING_NAME_VECTOR_DATA_DIR;
-
+@AllArgsConstructor
 public class EzyVectorService extends EzyLoggable {
 
-    private final MutableSettingService settingService;
+    private final FileSystemManager fileSystemManager;
+    private final EzyVectorSettingService ezyVectorSettingService;
     private final RagCollectionRepository collectionRepository;
     private final RagCollectionPointRepository collectionPointRepository;
     private final RagCollectionSegmentRepository collectionSegmentRepository;
-    private final ObjectMapper objectMapper;
+    private final EzyVectorEntityToModelConverter entityToModelConverter;
+    private final EzyVectorModelToEntityConverter modelToEntityConverter;
     private final Object writeLock = new Object();
     private final Set<Long> backfillingCollectionIds =
         ConcurrentHashMap.newKeySet();
@@ -64,75 +62,55 @@ public class EzyVectorService extends EzyLoggable {
     private final Set<Long> buildingHnswCollectionIds =
         ConcurrentHashMap.newKeySet();
 
-    public EzyVectorService(
-        MutableSettingService settingService,
-        RagCollectionRepository collectionRepository,
-        RagCollectionPointRepository collectionPointRepository,
-        RagCollectionSegmentRepository collectionSegmentRepository,
-        ObjectMapper objectMapper
-    ) {
-        this.settingService = settingService;
-        this.collectionRepository = collectionRepository;
-        this.collectionPointRepository = collectionPointRepository;
-        this.collectionSegmentRepository = collectionSegmentRepository;
-        this.objectMapper = objectMapper;
-    }
-
-    public CreateVectorCollectionResultModel createCollectionIfAbsent(
-        int vectorSize
+    public EzyVectorCollectionModel createCollectionIfAbsent(
+        String collectionName,
+        SaveVectorCollectionModel model
     ) throws Exception {
-        String collectionName = getCollectionName();
-        if (collectionRepository.findByName(collectionName) == null) {
-            LocalDateTime now = LocalDateTime.now();
-            RagCollection entity = new RagCollection();
-            entity.setName(collectionName);
-            entity.setVectorSize(vectorSize);
-            entity.setDistance("COSINE");
-            entity.setIndexType("HNSW");
-            entity.setStatus("ACTIVE");
-            entity.setCreatedAt(now);
-            entity.setUpdatedAt(now);
+        EzyVectorCollection entity = collectionRepository
+            .findByName(collectionName);
+        if (entity == null) {
+            entity = modelToEntityConverter
+                .toVectorCollectionEntity(collectionName, model);
             collectionRepository.save(entity);
         }
-        ensureMutableSegment();
-        startBackfillIfNecessary();
-        startHnswBuildIfNecessary();
-        return CreateVectorCollectionResultModel.builder()
-            .vectorSize(vectorSize)
+        ensureMutableSegment(collectionName);
+        startBackfillIfNecessary(collectionName);
+        startHnswBuildIfNecessary(collectionName);
+        return EzyVectorCollectionModel.builder()
+            .vectorSize(entity.getVectorSize())
             .build();
     }
 
     public void upsert(
-        List<VectorPointModel> points
+        List<SaveVectorPointModel> points
     ) throws Exception {
-        RagCollection collection = getCollectionOrThrow();
+        EzyVectorCollection collection = getCollectionOrThrow();
         ensureMutableSegment(collection);
         startBackfillIfNecessary(collection);
         startHnswBuildIfNecessary(collection);
-        LocalDateTime now = LocalDateTime.now();
         EzyVectorFileStorage storage = newVectorFileStorage();
+        long collectionId = collection.getId();
         synchronized (writeLock) {
             List<EzyVectorFileStorage.VectorRecord> records =
                 new ArrayList<>(points.size());
-            for (VectorPointModel point : points) {
-                RagCollectionPoint entity = collectionPointRepository
+            for (SaveVectorPointModel point : points) {
+                EzyVectorCollectionPoint entity = collectionPointRepository
                     .findByCollectionIdAndPointId(
-                        collection.getId(),
+                        collectionId,
                         point.getId()
                     );
                 if (entity == null) {
-                    entity = new RagCollectionPoint();
-                    entity.setCollectionId(collection.getId());
-                    entity.setPointId(point.getId());
-                    entity.setStatus("ACTIVE");
-                    entity.setVersion(1L);
-                    entity.setCreatedAt(now);
+                    entity = modelToEntityConverter
+                        .toVectorCollectionPointEntity(
+                            collectionId,
+                            point
+                        );
                 } else {
-                    entity.setVersion(entity.getVersion() + 1L);
+                    modelToEntityConverter.mergeToCollectionPointEntity(
+                        point,
+                        entity
+                    );
                 }
-                entity.setVector(point.getVector());
-                entity.setPayload(toPayloadJson(point.getPayload()));
-                entity.setUpdatedAt(now);
                 collectionPointRepository.save(entity);
                 records.add(
                     new EzyVectorFileStorage.VectorRecord(
@@ -152,11 +130,11 @@ public class EzyVectorService extends EzyLoggable {
         startHnswBuildIfNecessary(collection);
     }
 
-    public List<VectorSearchResultModel> search(
+    public List<EzyVectorSearchResultModel> search(
         float[] vector,
         int limit
     ) throws Exception {
-        RagCollection collection = getCollectionOrThrow();
+        EzyVectorCollection collection = getCollectionOrThrow();
         startBackfillIfNecessary(collection);
         startHnswBuildIfNecessary(collection);
         HnswIndex hnswIndex = getReadyHnswIndex(collection);
@@ -178,20 +156,20 @@ public class EzyVectorService extends EzyLoggable {
         return toExactSearchResults(collection, hits);
     }
 
-    private List<VectorSearchResultModel> toSearchResults(
-        RagCollection collection,
+    private List<EzyVectorSearchResultModel> toSearchResults(
+        EzyVectorCollection collection,
         List<HnswIndex.SearchResult> hits
     ) throws Exception {
-        List<VectorSearchResultModel> results =
+        List<EzyVectorSearchResultModel> results =
             new ArrayList<>(hits.size());
         for (HnswIndex.SearchResult hit : hits) {
-            RagCollectionPoint point = collectionPointRepository
+            EzyVectorCollectionPoint point = collectionPointRepository
                 .findByCollectionIdAndPointId(
                     collection.getId(),
                     hit.getId()
                 );
             results.add(
-                VectorSearchResultModel.builder()
+                EzyVectorSearchResultModel.builder()
                     .chunkId(hit.getId())
                     .score(hit.getScore())
                     .payload(
@@ -205,51 +183,33 @@ public class EzyVectorService extends EzyLoggable {
         return results;
     }
 
-    private List<VectorSearchResultModel> toExactSearchResults(
-        RagCollection collection,
+    private List<EzyVectorSearchResultModel> toExactSearchResults(
+        EzyVectorCollection collection,
         List<EzyVectorFileStorage.SearchResult> hits
     ) throws Exception {
-        List<VectorSearchResultModel> results =
+        List<EzyVectorSearchResultModel> results =
             new ArrayList<>(hits.size());
         for (EzyVectorFileStorage.SearchResult hit : hits) {
-            RagCollectionPoint point = collectionPointRepository
+            EzyVectorCollectionPoint point = collectionPointRepository
                 .findByCollectionIdAndPointId(
                     collection.getId(),
                     hit.getId()
                 );
             results.add(
-                VectorSearchResultModel.builder()
-                    .chunkId(hit.getId())
-                    .score(hit.getScore())
-                    .payload(
-                        point == null
-                            ? null
-                            : toPayloadMap(point.getPayload())
-                    )
-                    .build()
+                entityToModelConverter.toSearchResultModel(
+                    hit,
+                    point
+                )
             );
         }
         return results;
     }
 
-    @Override
-    public int getVectorSize() {
-        return settingService.getIntValue(
-            SETTING_NAME_MYSQL_VECTOR_SIZE,
-            DEFAULT_MYSQL_VECTOR_SIZE
-        );
-    }
-
-    public String getCollectionName() {
-        return settingService.getTextValue(
-            SETTING_NAME_MYSQL_COLLECTION_NAME,
-            DEFAULT_MYSQL_COLLECTION_NAME
-        );
-    }
-
-    private RagCollection getCollectionOrThrow() {
-        RagCollection collection = collectionRepository
-            .findByName(getCollectionName());
+    private EzyVectorCollection getCollectionOrThrow(
+        String collectionName
+    ) {
+        EzyVectorCollection collection = collectionRepository
+            .findByName(collectionName);
         if (collection == null) {
             throw new IllegalStateException(
                 "You need to setup MySQL vector database first"
@@ -258,21 +218,25 @@ public class EzyVectorService extends EzyLoggable {
         return collection;
     }
 
-    private void ensureMutableSegment() {
-        RagCollection collection = collectionRepository
-            .findByName(getCollectionName());
+    private void ensureMutableSegment(
+        String collectionName
+    ) {
+        EzyVectorCollection collection = collectionRepository
+            .findByName(collectionName);
         if (collection != null) {
             ensureMutableSegment(collection);
         }
     }
 
-    private void ensureMutableSegment(RagCollection collection) {
-        RagCollectionSegment segment = collectionSegmentRepository
+    private void ensureMutableSegment(
+        EzyVectorCollection collection
+    ) {
+        EzyVectorCollectionSegment segment = collectionSegmentRepository
             .findByCollectionIdAndSegmentNo(collection.getId(), 1L);
         if (segment != null) {
             return;
         }
-        segment = new RagCollectionSegment();
+        segment = new EzyVectorCollectionSegment();
         segment.setCollectionId(collection.getId());
         segment.setSegmentNo(1L);
         segment.setSegmentType("MUTABLE");
@@ -284,21 +248,23 @@ public class EzyVectorService extends EzyLoggable {
         collectionSegmentRepository.save(segment);
     }
 
-    private void startBackfillIfNecessary() throws Exception {
-        RagCollection collection = collectionRepository
-            .findByName(getCollectionName());
+    private void startBackfillIfNecessary(
+        String collectionName
+    ) throws Exception {
+        EzyVectorCollection collection = collectionRepository
+            .findByName(collectionName);
         if (collection != null) {
             startBackfillIfNecessary(collection);
         }
     }
 
     private void startBackfillIfNecessary(
-        RagCollection collection
+        EzyVectorCollection collection
     ) throws Exception {
         EzyVectorFileStorage storage = newVectorFileStorage();
         long backfillProgress =
             storage.getBackfillProgress(collection.getId());
-        List<RagCollectionPoint> points = collectionPointRepository
+        List<EzyVectorCollectionPoint> points = collectionPointRepository
             .findListByCollectionIdAndIdGreaterThan(
                 collection.getId(),
                 backfillProgress,
@@ -316,12 +282,12 @@ public class EzyVectorService extends EzyLoggable {
         thread.start();
     }
 
-    private void backfillCollection(RagCollection collection) {
+    private void backfillCollection(EzyVectorCollection collection) {
         try {
             EzyVectorFileStorage storage = newVectorFileStorage();
             long lastId = storage.getBackfillProgress(collection.getId());
             while (true) {
-                List<RagCollectionPoint> points = collectionPointRepository
+                List<EzyVectorCollectionPoint> points = collectionPointRepository
                     .findListByCollectionIdAndIdGreaterThan(
                         collection.getId(),
                         lastId,
@@ -333,7 +299,7 @@ public class EzyVectorService extends EzyLoggable {
                 synchronized (writeLock) {
                     List<EzyVectorFileStorage.VectorRecord> records =
                         new ArrayList<>(points.size());
-                    for (RagCollectionPoint point : points) {
+                    for (EzyVectorCollectionPoint point : points) {
                         records.add(
                             new EzyVectorFileStorage.VectorRecord(
                                 point.getId(),
@@ -362,17 +328,19 @@ public class EzyVectorService extends EzyLoggable {
         }
     }
 
-    private void startHnswBuildIfNecessary() throws Exception {
-        RagCollection collection = collectionRepository
-            .findByName(getCollectionName());
+    private void startHnswBuildIfNecessary(
+        String collectionName
+    ) throws Exception {
+        EzyVectorCollection collection = collectionRepository
+            .findByName(collectionName);
         if (collection != null) {
             startHnswBuildIfNecessary(collection);
         }
     }
 
     private void startHnswBuildIfNecessary(
-        RagCollection collection
-    ) throws Exception {
+        EzyVectorCollection collection
+    ) {
         long collectionId = collection.getId();
         if (readyHnswCollectionIds.contains(collectionId)) {
             return;
@@ -407,8 +375,8 @@ public class EzyVectorService extends EzyLoggable {
     }
 
     private HnswIndex getReadyHnswIndex(
-        RagCollection collection
-    ) throws Exception {
+        EzyVectorCollection collection
+    ) {
         long collectionId = collection.getId();
         if (!readyHnswCollectionIds.contains(collectionId)) {
             return null;
@@ -438,7 +406,7 @@ public class EzyVectorService extends EzyLoggable {
     }
 
     private void updateHnswIndex(
-        RagCollection collection,
+        EzyVectorCollection collection,
         List<EzyVectorFileStorage.VectorRecord> records
     ) throws Exception {
         HnswIndex index = hnswIndexByCollectionId.get(collection.getId());
@@ -453,7 +421,7 @@ public class EzyVectorService extends EzyLoggable {
         }
     }
 
-    private void buildHnswIndex(RagCollection collection) {
+    private void buildHnswIndex(EzyVectorCollection collection) {
         try {
             HnswIndex index = hnswIndexByCollectionId.get(collection.getId());
             if (index == null) {
@@ -462,7 +430,7 @@ public class EzyVectorService extends EzyLoggable {
             }
             long lastId = 0L;
             while (true) {
-                List<RagCollectionPoint> points = collectionPointRepository
+                List<EzyVectorCollectionPoint> points = collectionPointRepository
                     .findListByCollectionIdAndIdGreaterThan(
                         collection.getId(),
                         lastId,
@@ -471,7 +439,7 @@ public class EzyVectorService extends EzyLoggable {
                 if (points.isEmpty()) {
                     break;
                 }
-                for (RagCollectionPoint point : points) {
+                for (EzyVectorCollectionPoint point : points) {
                     index.insert(point.getPointId(), point.getVector());
                     lastId = point.getId();
                 }
@@ -491,27 +459,8 @@ public class EzyVectorService extends EzyLoggable {
 
     private EzyVectorFileStorage newVectorFileStorage() {
         return new EzyVectorFileStorage(
-            settingService.getTextValue(
-                SETTING_NAME_VECTOR_DATA_DIR,
-                DEFAULT_VECTOR_DATA_DIR
-            )
+            fileSystemManager,
+            ezyVectorSettingService.getVectorDataDir()
         );
-    }
-
-    private String toPayloadJson(
-        Map<String, Object> payload
-    ) throws Exception {
-        return payload == null
-            ? null
-            : objectMapper.writeValueAsString(payload);
-    }
-
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> toPayloadMap(
-        String json
-    ) throws Exception {
-        return isBlank(json)
-            ? null
-            : objectMapper.readValue(json, Map.class);
     }
 }

@@ -5,8 +5,8 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class CreateVectorCollectionModel {
-    private long vectorSize;
+public class SaveVectorCollectionModel {
+    private Vectors vectors;
 
     @Getter
     @Builder

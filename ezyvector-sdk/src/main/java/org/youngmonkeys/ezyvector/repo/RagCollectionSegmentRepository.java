@@ -17,12 +17,12 @@
 package org.youngmonkeys.ezyvector.repo;
 
 import com.tvd12.ezydata.database.EzyDatabaseRepository;
-import org.youngmonkeys.ezyvector.entity.RagCollectionSegment;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegment;
 
 public interface RagCollectionSegmentRepository
-    extends EzyDatabaseRepository<Long, RagCollectionSegment> {
+    extends EzyDatabaseRepository<Long, EzyVectorCollectionSegment> {
 
-    RagCollectionSegment findByCollectionIdAndSegmentNo(
+    EzyVectorCollectionSegment findByCollectionIdAndSegmentNo(
         long collectionId,
         long segmentNo
     );
