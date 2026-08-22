@@ -41,7 +41,7 @@ import org.youngmonkeys.ezyvector.web.validator.WebEzyVectorPointsValidator;
 import org.youngmonkeys.ezyvector.web.validator.WebEzyVectorSearchValidator;
 
 @Api
-@Controller("/collections")
+@Controller("/ezyvector/collections")
 @AllArgsConstructor
 public class WebApiEzyVectorCollectionController {
 

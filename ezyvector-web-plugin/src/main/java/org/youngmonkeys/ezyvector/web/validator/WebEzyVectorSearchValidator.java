@@ -16,6 +16,7 @@
 
 package org.youngmonkeys.ezyvector.web.validator;
 
+import com.tvd12.ezyfox.bean.annotation.EzySingleton;
 import com.tvd12.ezyhttp.core.exception.HttpBadRequestException;
 import org.youngmonkeys.ezyvector.web.request.WebEzyVectorSearchRequest;
 
@@ -24,6 +25,7 @@ import java.util.Map;
 
 import static org.youngmonkeys.ezyplatform.constant.CommonConstants.ZERO;
 
+@EzySingleton
 public class WebEzyVectorSearchValidator {
 
     public void validate(

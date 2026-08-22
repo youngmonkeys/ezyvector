@@ -1,0 +1,439 @@
+<!--
+ ~ Copyright 2026 youngmonkeys.org
+ ~
+ ~ Licensed under the ezyplatform, Version 1.0.0 (the "License");
+ ~ you may not use this file except in compliance with the License.
+ ~ You may obtain a copy of the License at
+ ~
+ ~     https://youngmonkeys.org/licenses/ezyplatform-1.0.0.txt
+ ~
+ ~ Unless required by applicable law or agreed to in writing, software
+ ~ distributed under the License is distributed on an "AS IS" BASIS,
+ ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ~ See the License for the specific language governing permissions and
+ ~ limitations under the License.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EzyVector API Sandbox</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        background: #0f1117;
+        color: #e5e7eb;
+        padding: 24px;
+    }
+    h1 {
+        font-size: 22px;
+        margin: 0 0 4px;
+    }
+    .subtitle {
+        color: #9ca3af;
+        margin: 0 0 24px;
+        font-size: 14px;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+        gap: 16px;
+        align-items: start;
+    }
+    .card {
+        background: #171a23;
+        border: 1px solid #262b38;
+        border-radius: 10px;
+        padding: 18px;
+    }
+    .card.full {
+        grid-column: 1 / -1;
+    }
+    .card h2 {
+        font-size: 15px;
+        margin: 0 0 12px;
+        color: #93c5fd;
+    }
+    .row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+        align-items: center;
+    }
+    .row label {
+        width: 110px;
+        flex-shrink: 0;
+        font-size: 13px;
+        color: #9ca3af;
+    }
+    input[type=text], input[type=number], select, textarea {
+        flex: 1;
+        background: #0f1117;
+        border: 1px solid #2d3242;
+        color: #e5e7eb;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 13px;
+        font-family: inherit;
+    }
+    textarea {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        min-height: 120px;
+        resize: vertical;
+    }
+    label.checkbox {
+        width: auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    button {
+        cursor: pointer;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    button.btn-random {
+        background: #2d3242;
+        color: #e5e7eb;
+    }
+    button.btn-random:hover {
+        background: #3a4156;
+    }
+    button.btn-primary {
+        background: #3b82f6;
+        color: #fff;
+    }
+    button.btn-primary:hover {
+        background: #2563eb;
+    }
+    .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+    }
+    pre.output {
+        margin-top: 12px;
+        background: #0b0d12;
+        border: 1px solid #262b38;
+        border-radius: 6px;
+        padding: 10px;
+        max-height: 260px;
+        overflow: auto;
+        font-size: 12px;
+        white-space: pre-wrap;
+        word-break: break-all;
+    }
+    pre.output.ok { border-color: #16a34a; }
+    pre.output.err { border-color: #dc2626; }
+    .status-line {
+        font-size: 12px;
+        margin-top: 8px;
+        font-weight: 600;
+    }
+    .status-line.ok { color: #4ade80; }
+    .status-line.err { color: #f87171; }
+    .hint {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: -4px;
+        margin-bottom: 10px;
+    }
+</style>
+</head>
+<body>
+
+<h1>EzyVector API Sandbox</h1>
+<p class="subtitle">
+    Manual test page for WebApiEzyVectorCollectionController — fill in an
+    API key if one is configured, click the random buttons to generate
+    test data, then send requests.
+</p>
+
+<div class="grid">
+
+<div class="card full">
+    <h2>Connection</h2>
+    <div class="row">
+        <label for="apiKeyInput">API key</label>
+        <input type="text" id="apiKeyInput" placeholder="Leave blank if no API key is configured">
+    </div>
+    <div class="hint">
+        Sent as the "x-api-key" header. Configure/view the key under Admin &gt; EzyVector &gt; Settings.
+    </div>
+</div>
+
+<div class="card">
+    <h2>1. Create / update collection</h2>
+    <div class="row">
+        <label for="collectionNameInput">Name</label>
+        <input type="text" id="collectionNameInput">
+        <button type="button" class="btn-random" onclick="randomCollectionName()">🎲 Random</button>
+    </div>
+    <div class="row">
+        <label for="vectorSizeInput">Dimension</label>
+        <input type="number" id="vectorSizeInput" min="1" value="128">
+        <button type="button" class="btn-random" onclick="randomVectorSize()">🎲 Random</button>
+    </div>
+    <div class="row">
+        <label for="distanceSelect">Distance</label>
+        <select id="distanceSelect">
+            <option value="cosine">cosine</option>
+        </select>
+    </div>
+    <div class="actions">
+        <button type="button" class="btn-primary" onclick="createCollection()">Create / update</button>
+        <button type="button" class="btn-primary" onclick="getCollection()">Get collection</button>
+    </div>
+    <div id="collectionStatus" class="status-line"></div>
+    <pre id="collectionOutput" class="output"></pre>
+</div>
+
+<div class="card">
+    <h2>2. Upsert points</h2>
+    <div class="row">
+        <label for="pointCountInput">Point count</label>
+        <input type="number" id="pointCountInput" min="1" value="5">
+        <button type="button" class="btn-random" onclick="randomPoints()">🎲 Random points</button>
+    </div>
+    <textarea id="pointsJsonTextarea" placeholder="[ { &quot;id&quot;: 1, &quot;vector&quot;: [...], &quot;payload&quot;: {} } ]"></textarea>
+    <div class="actions">
+        <button type="button" class="btn-primary" onclick="upsertPoints()">Upsert points</button>
+    </div>
+    <div id="pointsStatus" class="status-line"></div>
+    <pre id="pointsOutput" class="output"></pre>
+</div>
+
+<div class="card">
+    <h2>3. Search points</h2>
+    <div class="row">
+        <label for="searchLimitInput">Limit</label>
+        <input type="number" id="searchLimitInput" min="1" value="5">
+    </div>
+    <div class="row">
+        <label class="checkbox" for="withPayloadCheckbox">
+            <input type="checkbox" id="withPayloadCheckbox" checked> With payload
+        </label>
+    </div>
+    <textarea id="searchVectorTextarea" placeholder="[ 0.12, -0.5, ... ]"></textarea>
+    <div class="actions">
+        <button type="button" class="btn-random" onclick="randomSearchVector()">🎲 Random vector</button>
+        <button type="button" class="btn-random" onclick="useLastUpsertedVector()">📋 Use last upserted vector</button>
+        <button type="button" class="btn-primary" onclick="searchPoints()">Search</button>
+    </div>
+    <div id="searchStatus" class="status-line"></div>
+    <pre id="searchOutput" class="output"></pre>
+</div>
+
+</div>
+
+<script>
+var lastUpsertedVector = null;
+var PAYLOAD_CATEGORIES = ['electronics', 'books', 'clothing', 'toys', 'sports', 'grocery'];
+
+function randomString(length) {
+    var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var result = '';
+    for (var i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomFloat(min, max, decimals) {
+    var value = Math.random() * (max - min) + min;
+    return parseFloat(value.toFixed(decimals || 4));
+}
+
+function randomVector(dimension) {
+    var vector = [];
+    for (var i = 0; i < dimension; i++) {
+        vector.push(randomFloat(-1, 1));
+    }
+    return vector;
+}
+
+function currentDimension() {
+    return parseInt(document.getElementById('vectorSizeInput').value, 10) || 128;
+}
+
+function currentCollectionName() {
+    return document.getElementById('collectionNameInput').value.trim();
+}
+
+function buildHeaders() {
+    var headers = { 'Content-Type': 'application/json' };
+    var apiKey = document.getElementById('apiKeyInput').value.trim();
+    if (apiKey) {
+        headers['x-api-key'] = apiKey;
+    }
+    return headers;
+}
+
+function callApi(method, url, body, statusElId, outputElId) {
+    var statusEl = document.getElementById(statusElId);
+    var outputEl = document.getElementById(outputElId);
+    statusEl.textContent = 'Sending...';
+    statusEl.className = 'status-line';
+    fetch(url, {
+        method: method,
+        headers: buildHeaders(),
+        body: body !== undefined ? JSON.stringify(body) : undefined
+    }).then(function (response) {
+        response.json().then(function (data) {
+            var ok = response.status >= 200 && response.status < 300;
+            statusEl.textContent = method + ' ' + url + ' -> ' + response.status;
+            statusEl.className = 'status-line ' + (ok ? 'ok' : 'err');
+            outputEl.textContent = JSON.stringify(data, null, 2);
+            outputEl.className = 'output ' + (ok ? 'ok' : 'err');
+        }).catch(function () {
+            statusEl.textContent = method + ' ' + url + ' -> ' + response.status + ' (no JSON body)';
+            statusEl.className = 'status-line ' + (response.ok ? 'ok' : 'err');
+            outputEl.textContent = '';
+            outputEl.className = 'output';
+        });
+    }).catch(function (e) {
+        statusEl.textContent = 'Network error: ' + e.message;
+        statusEl.className = 'status-line err';
+        outputEl.textContent = '';
+        outputEl.className = 'output err';
+    });
+}
+
+function randomCollectionName() {
+    document.getElementById('collectionNameInput').value = 'col_' + randomString(8);
+}
+
+function randomVectorSize() {
+    var sizes = [32, 64, 128, 256, 384, 512, 768, 1024];
+    document.getElementById('vectorSizeInput').value = sizes[randomInt(0, sizes.length - 1)];
+}
+
+function createCollection() {
+    var name = currentCollectionName();
+    if (!name) {
+        randomCollectionName();
+        name = currentCollectionName();
+    }
+    var body = {
+        vectors: {
+            size: currentDimension(),
+            distance: document.getElementById('distanceSelect').value
+        }
+    };
+    callApi('PUT', '/ezyvector/collections/' + encodeURIComponent(name), body, 'collectionStatus', 'collectionOutput');
+}
+
+function getCollection() {
+    var name = currentCollectionName();
+    if (!name) {
+        return;
+    }
+    callApi('GET', '/ezyvector/collections/' + encodeURIComponent(name), undefined, 'collectionStatus', 'collectionOutput');
+}
+
+function randomPayload() {
+    return {
+        category: PAYLOAD_CATEGORIES[randomInt(0, PAYLOAD_CATEGORIES.length - 1)],
+        price: randomInt(10, 1000),
+        inStock: Math.random() > 0.5
+    };
+}
+
+function randomPoints() {
+    var count = parseInt(document.getElementById('pointCountInput').value, 10) || 5;
+    var dimension = currentDimension();
+    var points = [];
+    for (var i = 0; i < count; i++) {
+        points.push({
+            id: randomInt(1, 1000000),
+            vector: randomVector(dimension),
+            payload: randomPayload()
+        });
+    }
+    document.getElementById('pointsJsonTextarea').value = JSON.stringify(points, null, 2);
+}
+
+function upsertPoints() {
+    var name = currentCollectionName();
+    if (!name) {
+        return;
+    }
+    var points;
+    try {
+        points = JSON.parse(document.getElementById('pointsJsonTextarea').value);
+    } catch (e) {
+        var statusEl = document.getElementById('pointsStatus');
+        statusEl.textContent = 'Invalid JSON: ' + e.message;
+        statusEl.className = 'status-line err';
+        return;
+    }
+    if (points.length > 0) {
+        lastUpsertedVector = points[0].vector;
+    }
+    callApi(
+        'PUT',
+        '/ezyvector/collections/' + encodeURIComponent(name) + '/points',
+        { points: points },
+        'pointsStatus',
+        'pointsOutput'
+    );
+}
+
+function randomSearchVector() {
+    document.getElementById('searchVectorTextarea').value = JSON.stringify(randomVector(currentDimension()));
+}
+
+function useLastUpsertedVector() {
+    if (!lastUpsertedVector) {
+        randomPoints();
+        var points = JSON.parse(document.getElementById('pointsJsonTextarea').value);
+        lastUpsertedVector = points[0].vector;
+    }
+    document.getElementById('searchVectorTextarea').value = JSON.stringify(lastUpsertedVector);
+}
+
+function searchPoints() {
+    var name = currentCollectionName();
+    if (!name) {
+        return;
+    }
+    var vector;
+    try {
+        vector = JSON.parse(document.getElementById('searchVectorTextarea').value);
+    } catch (e) {
+        var statusEl = document.getElementById('searchStatus');
+        statusEl.textContent = 'Invalid JSON: ' + e.message;
+        statusEl.className = 'status-line err';
+        return;
+    }
+    var body = {
+        vector: vector,
+        limit: parseInt(document.getElementById('searchLimitInput').value, 10) || 5,
+        with_payload: document.getElementById('withPayloadCheckbox').checked
+    };
+    callApi(
+        'POST',
+        '/ezyvector/collections/' + encodeURIComponent(name) + '/points/search',
+        body,
+        'searchStatus',
+        'searchOutput'
+    );
+}
+
+randomCollectionName();
+</script>
+</body>
+</html>

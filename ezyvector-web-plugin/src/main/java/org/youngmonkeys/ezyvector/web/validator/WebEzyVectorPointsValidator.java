@@ -16,6 +16,7 @@
 
 package org.youngmonkeys.ezyvector.web.validator;
 
+import com.tvd12.ezyfox.bean.annotation.EzySingleton;
 import com.tvd12.ezyhttp.core.exception.HttpBadRequestException;
 import org.youngmonkeys.ezyvector.web.request.WebUpsertVectorPointsRequest;
 
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@EzySingleton
 public class WebEzyVectorPointsValidator {
 
     public void validate(
