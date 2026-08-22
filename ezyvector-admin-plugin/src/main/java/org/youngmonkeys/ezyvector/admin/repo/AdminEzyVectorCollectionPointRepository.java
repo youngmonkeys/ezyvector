@@ -14,21 +14,14 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.admin.converter;
+package org.youngmonkeys.ezyvector.admin.repo;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tvd12.ezyfox.bean.annotation.EzySingleton;
-import org.youngmonkeys.ezyplatform.time.ClockProxy;
-import org.youngmonkeys.ezyvector.converter.EzyVectorEntityToModelConverter;
+import com.tvd12.ezydata.database.EzyDatabaseRepository;
+import com.tvd12.ezyfox.database.annotation.EzyRepository;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPoint;
+import org.youngmonkeys.ezyvector.repo.EzyVectorCollectionPointRepository;
 
-@EzySingleton
-public class AdminEzyVectorEntityToModelConverter
-    extends EzyVectorEntityToModelConverter {
-
-    public AdminEzyVectorEntityToModelConverter(
-        ClockProxy clock,
-        ObjectMapper objectMapper
-    ) {
-        super(clock, objectMapper);
-    }
-}
+@EzyRepository
+public interface AdminEzyVectorCollectionPointRepository extends
+    EzyVectorCollectionPointRepository,
+    EzyDatabaseRepository<Long, EzyVectorCollectionPoint> {}
