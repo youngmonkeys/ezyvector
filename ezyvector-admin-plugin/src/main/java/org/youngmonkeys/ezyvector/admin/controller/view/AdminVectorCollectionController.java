@@ -26,6 +26,7 @@ import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyvector.admin.controller.service.AdminEzyVectorCollectionControllerService;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionPointStatus;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegmentStatus;
+import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionSegmentType;
 import org.youngmonkeys.ezyvector.entity.EzyVectorCollectionStatus;
 
 import static com.tvd12.ezyfox.io.EzyLists.newArrayList;
@@ -90,6 +91,13 @@ public class AdminVectorCollectionController {
                 VIEW_VARIABLE_ADDITIONAL_MESSAGE_KEYS,
                 newArrayList(
                     EzyVectorCollectionPointStatus.values(),
+                    it -> it.toString().toLowerCase()
+                )
+            )
+            .appendValuesToVariable(
+                VIEW_VARIABLE_ADDITIONAL_MESSAGE_KEYS,
+                newArrayList(
+                    EzyVectorCollectionSegmentType.values(),
                     it -> it.toString().toLowerCase()
                 )
             )

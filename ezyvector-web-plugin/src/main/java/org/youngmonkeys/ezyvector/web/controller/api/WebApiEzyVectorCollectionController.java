@@ -16,6 +16,12 @@
 
 package org.youngmonkeys.ezyvector.web.controller.api;
 
+import com.tvd12.ezyfox.util.EzyLoggable;
+import com.tvd12.ezyhttp.core.constant.StatusCodes;
+import com.tvd12.ezyhttp.core.exception.HttpBadRequestException;
+import com.tvd12.ezyhttp.core.exception.HttpNotFoundException;
+import com.tvd12.ezyhttp.core.exception.HttpUnauthorizedException;
+import com.tvd12.ezyhttp.core.response.ResponseEntity;
 import com.tvd12.ezyhttp.server.core.annotation.Api;
 import com.tvd12.ezyhttp.server.core.annotation.Controller;
 import com.tvd12.ezyhttp.server.core.annotation.DoGet;
@@ -23,8 +29,10 @@ import com.tvd12.ezyhttp.server.core.annotation.DoPost;
 import com.tvd12.ezyhttp.server.core.annotation.DoPut;
 import com.tvd12.ezyhttp.server.core.annotation.PathVariable;
 import com.tvd12.ezyhttp.server.core.annotation.RequestBody;
+import com.tvd12.ezyhttp.server.core.annotation.TryCatch;
 import com.tvd12.ezyhttp.server.core.request.RequestArguments;
 import lombok.AllArgsConstructor;
+import org.youngmonkeys.ezyplatform.exception.ResourceNotFoundException;
 import org.youngmonkeys.ezyvector.web.controller.service.WebEzyVectorCollectionControllerService;
 import org.youngmonkeys.ezyvector.web.controller.service.WebEzyVectorPointsControllerService;
 import org.youngmonkeys.ezyvector.web.controller.service.WebEzyVectorSearchControllerService;
@@ -43,7 +51,7 @@ import org.youngmonkeys.ezyvector.web.validator.WebEzyVectorSearchValidator;
 @Api
 @Controller("/ezyvector/collections")
 @AllArgsConstructor
-public class WebApiEzyVectorCollectionController {
+public class WebApiEzyVectorCollectionController extends EzyLoggable {
 
     private final WebEzyVectorCollectionControllerService vectorCollectionControllerService;
     private final WebEzyVectorPointsControllerService vectorPointsControllerService;
@@ -109,5 +117,42 @@ public class WebApiEzyVectorCollectionController {
             collectionName,
             request
         );
+    }
+
+    @TryCatch(HttpBadRequestException.class)
+    public Object handle(
+        HttpBadRequestException e
+    ) {
+        logger.info("{}({})", e.getClass().getSimpleName(), e.getMessage());
+        return ResponseEntity.badRequest(e.getData());
+    }
+
+    @TryCatch(ResourceNotFoundException.class)
+    public Object handle(
+        ResourceNotFoundException e
+    ) {
+        logger.info("{}({})", e.getClass().getSimpleName(), e.getMessage());
+        return ResponseEntity.notFound(
+            e.getResponseData()
+        );
+    }
+
+    @TryCatch(HttpNotFoundException.class)
+    public Object handle(
+        HttpNotFoundException e
+    ) {
+        logger.info("{}({})", e.getClass().getSimpleName(), e.getMessage());
+        return ResponseEntity.notFound(e.getData());
+    }
+
+    @TryCatch(HttpUnauthorizedException.class)
+    public Object handle(
+        HttpUnauthorizedException e
+    ) {
+        logger.info("{}({})", e.getClass().getSimpleName(), e.getMessage());
+        return ResponseEntity.builder()
+            .status(StatusCodes.UNAUTHORIZED)
+            .body(e.getData())
+            .build();
     }
 }

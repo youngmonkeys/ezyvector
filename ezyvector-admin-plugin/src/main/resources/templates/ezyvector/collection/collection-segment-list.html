@@ -208,7 +208,7 @@ ezyvector.buildCollectionSegmentListItemHtml = function(collectionSegment) {
         <tr>
             <td class="text-center">${collectionSegment.id}</td>
             <td class="text-center">${collectionSegment.segmentNo}</td>
-            <td class="text-center">${ezyadmin.escapeHtml(collectionSegment.segmentType || '')}</td>
+            <td class="text-center">${ezyadmin.getI18nMessage(collectionSegment.segmentType?.toLowerCase() || '')}</td>
             <td class="text-center">
                 ${ezyvector.formatCollectionSegmentStatus(collectionSegment.status)}
             </td>

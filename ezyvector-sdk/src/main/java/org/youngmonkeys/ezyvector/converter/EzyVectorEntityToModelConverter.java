@@ -42,6 +42,9 @@ public class EzyVectorEntityToModelConverter {
     public EzyVectorCollectionModel toModel(
         EzyVectorCollection entity
     ) {
+        if (entity == null) {
+            return null;
+        }
         return EzyVectorCollectionModel.builder()
             .id(entity.getId())
             .name(entity.getName())

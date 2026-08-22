@@ -186,17 +186,6 @@ ezyvector.buildCollectionPointListBodyHtml = function(collectionPoints) {
     return html;
 }
 
-ezyvector.formatCollectionPointStatus = function(status) {
-    if (!status) {
-        return '';
-    }
-    return `
-        <span class="${ezyadmin.getTextColorByStatus(status)}">
-            ${ezyadmin.getI18nMessage(status.toLowerCase())}
-        </span>
-        `;
-}
-
 ezyvector.formatCollectionPointPayload = function(payload) {
     if (!payload) {
         return '';
@@ -205,6 +194,7 @@ ezyvector.formatCollectionPointPayload = function(payload) {
 }
 
 ezyvector.buildCollectionPointListItemHtml = function(collectionPoint) {
+    var statusColor = ezyadmin.getTextColorByStatus(collectionPoint.status || '');
     return `
         <tr>
             <td class="text-center">${collectionPoint.id}</td>
@@ -213,8 +203,8 @@ ezyvector.buildCollectionPointListItemHtml = function(collectionPoint) {
             <td class="text-wrap" style="min-width: 240px; max-width: 520px;">
                 ${ezyvector.formatCollectionPointPayload(collectionPoint.payload)}
             </td>
-            <td class="text-center">
-                ${ezyvector.formatCollectionPointStatus(collectionPoint.status)}
+            <td class="text-center ${statusColor}">
+                ${ezyadmin.getI18nMessage(collectionPoint.status?.toLowerCase() || '')}
             </td>
             <td class="text-center">${collectionPoint.version}</td>
             <td class="text-center">${ezyadmin.formatTimeStamp(collectionPoint.createdAt)}</td>
