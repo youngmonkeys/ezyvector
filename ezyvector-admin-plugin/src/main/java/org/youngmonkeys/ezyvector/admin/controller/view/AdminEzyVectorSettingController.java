@@ -24,9 +24,6 @@ import com.tvd12.ezyhttp.server.core.view.View;
 import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyvector.admin.service.AdminEzyVectorSettingService;
 
-import static com.tvd12.ezyfox.io.EzyStrings.isBlank;
-import static org.youngmonkeys.ezyplatform.constant.CommonConstants.DEFAULT_HIDDEN_PASSWORD;
-
 @Controller
 @Authenticated
 @EzyFeature("settings_management")
@@ -43,9 +40,7 @@ public class AdminEzyVectorSettingController {
             .template("ezyvector/setting/index")
             .addVariable(
                 "vectorCollectionsApiKey",
-                isBlank(vectorCollectionsApiKey)
-                    ? null
-                    : DEFAULT_HIDDEN_PASSWORD
+                vectorCollectionsApiKey
             )
             .build();
     }

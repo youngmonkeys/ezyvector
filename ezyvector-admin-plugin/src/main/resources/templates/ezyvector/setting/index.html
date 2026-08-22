@@ -33,17 +33,31 @@
         <strong class="text-info">[[#{save_setting_hot_key_guide}]]</strong>
     </div>
     <div class="col-md-12">
-        <form id="updateSettingsForm" onsubmit="return false;">
+        <form id="updateCollectionsForm" onsubmit="return false;">
             <div class="col-12 mt-3"></div>
             <div class="form-group row">
                 <label for="vectorCollectionsApiKey" class="col-sm-3 col-form-label">
                     [[#{vector_collections_api_key}]]
                 </label>
                 <div class="col-lg-7 col-md-6">
-                    <input type="password" name="vectorCollectionsApiKey" id="vectorCollectionsApiKey"
-                           class="form-control" th:placeholder="#{vector_collections_api_key}"
-                           th:value="${vectorCollectionsApiKey}"
-                           autocomplete="new-password">
+                    <div class="d-flex align-items-center">
+                        <input type="password" name="vectorCollectionsApiKey" id="vectorCollectionsApiKey"
+                               class="form-control" th:placeholder="#{vector_collections_api_key}"
+                               th:value="${vectorCollectionsApiKey}"
+                               autocomplete="new-password">
+                        <button type="button" class="btn btn-info" id="showVectorCollectionsApiKeyButton" tabindex="-1"
+                                onclick="ezyadmin.togglePasswordVisible('vectorCollectionsApiKey', 'showVectorCollectionsApiKeyButton', 'hideVectorCollectionsApiKeyButton')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button type="button" class="btn btn-secondary d-none" id="hideVectorCollectionsApiKeyButton" tabindex="-1"
+                                onclick="ezyadmin.togglePasswordVisible('vectorCollectionsApiKey', 'showVectorCollectionsApiKeyButton', 'hideVectorCollectionsApiKeyButton')">
+                            <i class="fas fa-eye-slash"></i>
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="randomVectorCollectionsApiKeyButton" tabindex="-1"
+                                onclick="ezyvector.randomVectorCollectionsApiKey();">
+                            <i class="fas fa-random"></i>
+                        </button>
+                    </div>
                 </div>
                 <label id="vectorCollectionsApiKeyErrorLabel" class="col-lg-2 col-md-3 col-form-label text-danger d-none"
                        for="vectorCollectionsApiKey">
@@ -70,11 +84,15 @@
 ezyadmin.messages.save_successfully = /*[[#{save_successfully}]]*/;
 /*]]>*/
 
+ezyvector.randomVectorCollectionsApiKey = function() {
+    $('#vectorCollectionsApiKey').val(ezyadmin.randomString(64));
+}
+
 ezyvector.saveSettings = function() {
-    var formData = ezyadmin.formDataToObject('updateSettingsForm');
+    var formData = ezyadmin.formDataToObject('updateCollectionsForm');
     $.ajax({
         type: 'PUT',
-        url: '/ezyvector/api/v1/settings',
+        url: '/ezyvector/api/v1/settings/collections',
         contentType: 'application/json',
         data: JSON.stringify(formData),
         success: function () {
@@ -88,7 +106,7 @@ ezyvector.saveSettings = function() {
 }
 
 ezyvector.handleSettingsSaveShortcut = function(event) {
-    var $form = $('#updateSettingsForm');
+    var $form = $('#updateCollectionsForm');
     var $saveButton = $('#saveezyvectorSettingButton');
     if (!$form.length || !$saveButton.length) {
         return;

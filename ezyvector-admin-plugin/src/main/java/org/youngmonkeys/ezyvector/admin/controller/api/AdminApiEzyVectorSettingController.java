@@ -25,7 +25,7 @@ import com.tvd12.ezyhttp.server.core.annotation.Controller;
 import com.tvd12.ezyhttp.server.core.annotation.DoPut;
 import com.tvd12.ezyhttp.server.core.annotation.RequestBody;
 import lombok.AllArgsConstructor;
-import org.youngmonkeys.ezyvector.admin.request.AdminSaveEzyVectorSettingsRequest;
+import org.youngmonkeys.ezyvector.admin.request.AdminSaveEzyVectorCollectionsSettingRequest;
 import org.youngmonkeys.ezyvector.admin.service.AdminEzyVectorSettingService;
 
 @Api
@@ -37,10 +37,10 @@ public class AdminApiEzyVectorSettingController {
 
     private final AdminEzyVectorSettingService ezyVectorSettingService;
 
-    @Description("Update ezyvecto settings")
-    @DoPut("/settings")
+    @Description("Update vector collections setting")
+    @DoPut("/settings/collections")
     public ResponseEntity settingsPut(
-        @RequestBody AdminSaveEzyVectorSettingsRequest request
+        @RequestBody AdminSaveEzyVectorCollectionsSettingRequest request
     ) {
         ezyVectorSettingService.setVectorCollectionsApiKey(
             request.getVectorCollectionsApiKey()
