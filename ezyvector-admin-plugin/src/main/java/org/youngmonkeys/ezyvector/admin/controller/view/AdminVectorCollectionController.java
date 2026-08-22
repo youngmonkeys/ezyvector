@@ -59,12 +59,12 @@ public class AdminVectorCollectionController {
             .build();
     }
 
-    @DoGet("/vector-collections/{id}/details")
-    public View vectorCollectionsIdDetailsGet(
+    @DoGet("/vector-collections/{id}")
+    public View vectorCollectionsIdsGet(
         @PathVariable long collectionId
     ) {
         return View.builder()
-            .template("ezyvector/collection/list")
+            .template("ezyvector/collection/details")
             .addVariable(
                 "vectorCollection",
                 vectorCollectionControllerService
