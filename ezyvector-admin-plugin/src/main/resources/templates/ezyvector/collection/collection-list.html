@@ -58,6 +58,7 @@
                         <th>[[#{config}]]</th>
                         <th class="text-center">[[#{created_at}]]</th>
                         <th class="text-center">[[#{updated_at}]]</th>
+                        <th class="text-center">[[#{actions}]]</th>
                     </tr>
                     </thead>
                     <tbody id="vectorCollectionListBody">
@@ -245,6 +246,11 @@ ezyvector.buildVectorCollectionListItemHtml = function(vectorCollection) {
             </td>
             <td class="text-center">${ezyadmin.formatTimeStamp(vectorCollection.createdAt)}</td>
             <td class="text-center">${ezyadmin.formatTimeStamp(vectorCollection.updatedAt)}</td>
+            <td class="text-center">
+                <a class="btn btn-link px-1" href="/ezyvector/vector-collections/${vectorCollection.id}/details">
+                    <i class="fas fa-eye text-info"></i>
+                </a>
+            </td>
         </tr>
         `;
 }
