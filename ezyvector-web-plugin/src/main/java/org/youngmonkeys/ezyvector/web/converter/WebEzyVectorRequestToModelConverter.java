@@ -16,6 +16,7 @@
 
 package org.youngmonkeys.ezyvector.web.converter;
 
+import com.tvd12.ezyfox.bean.annotation.EzySingleton;
 import org.youngmonkeys.ezyvector.model.SaveVectorCollectionModel;
 import org.youngmonkeys.ezyvector.model.SaveVectorPointModel;
 import org.youngmonkeys.ezyvector.web.request.WebCreateVectorCollectionRequest;
@@ -24,6 +25,7 @@ import org.youngmonkeys.ezyvector.web.request.WebUpsertVectorPointsRequest;
 import java.util.ArrayList;
 import java.util.List;
 
+@EzySingleton
 public class WebEzyVectorRequestToModelConverter {
 
     public SaveVectorCollectionModel toSaveVectorCollectionModel(

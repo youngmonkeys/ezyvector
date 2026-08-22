@@ -16,12 +16,14 @@
 
 package org.youngmonkeys.ezyvector.web.controller.api;
 
+import com.tvd12.ezyhttp.server.core.annotation.Api;
 import com.tvd12.ezyhttp.server.core.annotation.Controller;
 import com.tvd12.ezyhttp.server.core.annotation.DoGet;
 import com.tvd12.ezyhttp.server.core.annotation.DoPost;
 import com.tvd12.ezyhttp.server.core.annotation.DoPut;
 import com.tvd12.ezyhttp.server.core.annotation.PathVariable;
 import com.tvd12.ezyhttp.server.core.annotation.RequestBody;
+import com.tvd12.ezyhttp.server.core.request.RequestArguments;
 import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyvector.web.controller.service.WebEzyVectorCollectionControllerService;
 import org.youngmonkeys.ezyvector.web.controller.service.WebEzyVectorPointsControllerService;
@@ -38,6 +40,7 @@ import org.youngmonkeys.ezyvector.web.validator.WebEzyVectorCollectionValidator;
 import org.youngmonkeys.ezyvector.web.validator.WebEzyVectorPointsValidator;
 import org.youngmonkeys.ezyvector.web.validator.WebEzyVectorSearchValidator;
 
+@Api
 @Controller("/collections")
 @AllArgsConstructor
 public class WebApiEzyVectorCollectionController {
@@ -52,9 +55,11 @@ public class WebApiEzyVectorCollectionController {
 
     @DoPut("/{collectionName}")
     public WebCreateVectorCollectionResponse collectionNamePut(
+        RequestArguments arguments,
         @PathVariable String collectionName,
         @RequestBody WebCreateVectorCollectionRequest request
     ) throws Exception {
+        vectorCollectionValidator.validateAuthentication(arguments);
         vectorCollectionValidator.validate(request);
         vectorCollectionControllerService.createCollectionIfAbsent(
             collectionName,
@@ -70,17 +75,21 @@ public class WebApiEzyVectorCollectionController {
 
     @DoGet("/{collectionName}")
     public WebGetVectorCollectionResponse collectionNameGet(
+        RequestArguments arguments,
         @PathVariable String collectionName
     ) {
+        vectorCollectionValidator.validateAuthentication(arguments);
         return vectorCollectionControllerService
             .getVectorCollectionByName(collectionName);
     }
 
     @DoPut("/{collectionName}/points")
     public WebUpsertVectorPointsResponse collectionNamePointsPut(
+        RequestArguments arguments,
         @PathVariable String collectionName,
         @RequestBody WebUpsertVectorPointsRequest request
     ) throws Exception {
+        vectorCollectionValidator.validateAuthentication(arguments);
         vectorPointsValidator.validate(request);
         return vectorPointsControllerService.upsertPoints(
             collectionName,
@@ -90,9 +99,11 @@ public class WebApiEzyVectorCollectionController {
 
     @DoPost("/{collectionName}/points/search")
     public WebEzyVectorSearchResponse collectionNamePointsSearchPost(
+        RequestArguments arguments,
         @PathVariable String collectionName,
         @RequestBody WebEzyVectorSearchRequest request
     ) throws Exception {
+        vectorCollectionValidator.validateAuthentication(arguments);
         vectorSearchValidator.validate(request);
         return vectorSearchControllerService.search(
             collectionName,

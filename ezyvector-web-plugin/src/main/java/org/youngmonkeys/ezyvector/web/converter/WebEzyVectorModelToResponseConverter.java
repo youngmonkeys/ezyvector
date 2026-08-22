@@ -16,6 +16,7 @@
 
 package org.youngmonkeys.ezyvector.web.converter;
 
+import com.tvd12.ezyfox.bean.annotation.EzySingleton;
 import org.youngmonkeys.ezyvector.model.EzyVectorCollectionModel;
 import org.youngmonkeys.ezyvector.model.EzyVectorSearchResultModel;
 import org.youngmonkeys.ezyvector.web.response.WebEzyVectorSearchResponse;
@@ -24,6 +25,7 @@ import org.youngmonkeys.ezyvector.web.response.WebGetVectorCollectionResponse;
 import java.util.ArrayList;
 import java.util.List;
 
+@EzySingleton
 public class WebEzyVectorModelToResponseConverter {
 
     public WebEzyVectorSearchResponse toSearchResponse(

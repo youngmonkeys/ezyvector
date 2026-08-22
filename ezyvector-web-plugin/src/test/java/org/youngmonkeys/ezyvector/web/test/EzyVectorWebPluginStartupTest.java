@@ -26,13 +26,7 @@ import com.tvd12.ezyhttp.server.core.annotation.PropertiesSources;
 })
 @ComponentsScan({
     "org.youngmonkeys.ezyplatform",
-    "org.youngmonkeys.ezyvector",
-    "org.youngmonkeys.ezyai",
-    "org.youngmonkeys.ezyarticle",
-    "org.youngmonkeys.ezychat",
-    "org.youngmonkeys.graphql",
-    "org.youngmonkeys.ecommerce",
-    "org.youngmonkeys.ezymail"
+    "org.youngmonkeys.ezyvector"
 })
 public class EzyVectorWebPluginStartupTest {
 

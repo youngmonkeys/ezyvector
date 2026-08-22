@@ -37,9 +37,8 @@ public class AdminEzyVectorSettingService extends EzyVectorSettingService {
     }
 
     public void setVectorCollectionsApiKey(String value) {
-        if (
-            isNotBlank(value) &&
-                !value.matches(PATTERN_HIDDEN_PASSWORD)
+        if (isNotBlank(value)
+            && !value.matches(PATTERN_HIDDEN_PASSWORD)
         ) {
             settingService.setPasswordValue(
                 SETTING_NAME_VECTOR_COLLECTIONS_API_KEY,

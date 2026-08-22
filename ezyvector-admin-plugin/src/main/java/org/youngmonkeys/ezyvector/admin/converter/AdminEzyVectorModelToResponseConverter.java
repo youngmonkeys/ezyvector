@@ -16,10 +16,12 @@
 
 package org.youngmonkeys.ezyvector.admin.converter;
 
+import com.tvd12.ezyfox.bean.annotation.EzySingleton;
 import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionDetailsResponse;
 import org.youngmonkeys.ezyvector.admin.response.AdminEzyVectorCollectionResponse;
 import org.youngmonkeys.ezyvector.model.EzyVectorCollectionModel;
 
+@EzySingleton
 public class AdminEzyVectorModelToResponseConverter {
 
     public AdminEzyVectorCollectionResponse toVectorCollectionResponse(
