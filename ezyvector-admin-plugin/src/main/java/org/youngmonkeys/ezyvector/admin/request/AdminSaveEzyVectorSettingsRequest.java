@@ -22,4 +22,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AdminSaveEzyVectorSettingsRequest {
+
+    private String vectorCollectionsApiKey;
 }

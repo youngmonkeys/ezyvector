@@ -34,7 +34,6 @@ import org.youngmonkeys.ezyvector.web.response.WebCreateVectorCollectionResponse
 import org.youngmonkeys.ezyvector.web.response.WebEzyVectorSearchResponse;
 import org.youngmonkeys.ezyvector.web.response.WebGetVectorCollectionResponse;
 import org.youngmonkeys.ezyvector.web.response.WebUpsertVectorPointsResponse;
-import org.youngmonkeys.ezyvector.web.service.WebEzyVectorService;
 import org.youngmonkeys.ezyvector.web.validator.WebEzyVectorCollectionValidator;
 import org.youngmonkeys.ezyvector.web.validator.WebEzyVectorPointsValidator;
 import org.youngmonkeys.ezyvector.web.validator.WebEzyVectorSearchValidator;
@@ -43,7 +42,6 @@ import org.youngmonkeys.ezyvector.web.validator.WebEzyVectorSearchValidator;
 @AllArgsConstructor
 public class WebApiEzyVectorCollectionController {
 
-    private final WebEzyVectorService vectorDatabaseService;
     private final WebEzyVectorCollectionControllerService vectorCollectionControllerService;
     private final WebEzyVectorPointsControllerService vectorPointsControllerService;
     private final WebEzyVectorSearchControllerService vectorSearchControllerService;
@@ -58,7 +56,7 @@ public class WebApiEzyVectorCollectionController {
         @RequestBody WebCreateVectorCollectionRequest request
     ) throws Exception {
         vectorCollectionValidator.validate(request);
-        vectorDatabaseService.createCollectionIfAbsent(
+        vectorCollectionControllerService.createCollectionIfAbsent(
             collectionName,
             vectorRequestToModelConverter.toSaveVectorCollectionModel(
                 request

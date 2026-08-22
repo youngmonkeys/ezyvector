@@ -20,16 +20,29 @@ import com.tvd12.ezyhttp.server.core.annotation.Service;
 import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyplatform.exception.ResourceNotFoundException;
 import org.youngmonkeys.ezyvector.model.EzyVectorCollectionModel;
+import org.youngmonkeys.ezyvector.model.SaveVectorCollectionModel;
 import org.youngmonkeys.ezyvector.web.controller.decorator.WebEzyVectorCollectionModelDecorator;
 import org.youngmonkeys.ezyvector.web.response.WebGetVectorCollectionResponse;
 import org.youngmonkeys.ezyvector.web.service.WebEzyVectorCollectionService;
+import org.youngmonkeys.ezyvector.web.service.WebEzyVectorService;
 
 @Service
 @AllArgsConstructor
 public class WebEzyVectorCollectionControllerService {
 
+    private final WebEzyVectorService vectorDatabaseService;
     private final WebEzyVectorCollectionService vectorCollectionService;
     private final WebEzyVectorCollectionModelDecorator vectorCollectionModelDecorator;
+
+    public void createCollectionIfAbsent(
+        String collectionName,
+        SaveVectorCollectionModel model
+    ) throws Exception {
+        vectorDatabaseService.createCollectionIfAbsent(
+            collectionName,
+            model
+        );
+    }
 
     public WebGetVectorCollectionResponse getVectorCollectionByName(
         String collectionName

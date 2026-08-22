@@ -22,6 +22,10 @@ import com.tvd12.ezyhttp.server.core.annotation.Controller;
 import com.tvd12.ezyhttp.server.core.annotation.DoGet;
 import com.tvd12.ezyhttp.server.core.view.View;
 import lombok.AllArgsConstructor;
+import org.youngmonkeys.ezyvector.admin.service.AdminEzyVectorSettingService;
+
+import static com.tvd12.ezyfox.io.EzyStrings.isBlank;
+import static org.youngmonkeys.ezyplatform.constant.CommonConstants.DEFAULT_HIDDEN_PASSWORD;
 
 @Controller
 @Authenticated
@@ -29,10 +33,20 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class AdminEzyVectorSettingController {
 
+    private final AdminEzyVectorSettingService ezyVectorSettingService;
+
     @DoGet("/settings")
     public View settingsGet() {
+        String vectorCollectionsApiKey = ezyVectorSettingService
+            .getVectorCollectionsApiKey();
         return View.builder()
             .template("ezyvector/setting/index")
+            .addVariable(
+                "vectorCollectionsApiKey",
+                isBlank(vectorCollectionsApiKey)
+                    ? null
+                    : DEFAULT_HIDDEN_PASSWORD
+            )
             .build();
     }
 }

@@ -26,6 +26,7 @@ import com.tvd12.ezyhttp.server.core.annotation.DoPut;
 import com.tvd12.ezyhttp.server.core.annotation.RequestBody;
 import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyvector.admin.request.AdminSaveEzyVectorSettingsRequest;
+import org.youngmonkeys.ezyvector.admin.service.AdminEzyVectorSettingService;
 
 @Api
 @Authenticated
@@ -34,11 +35,16 @@ import org.youngmonkeys.ezyvector.admin.request.AdminSaveEzyVectorSettingsReques
 @AllArgsConstructor
 public class AdminApiEzyVectorSettingController {
 
+    private final AdminEzyVectorSettingService ezyVectorSettingService;
+
     @Description("Update ezyvecto settings")
     @DoPut("/settings")
     public ResponseEntity settingsPut(
         @RequestBody AdminSaveEzyVectorSettingsRequest request
     ) {
+        ezyVectorSettingService.setVectorCollectionsApiKey(
+            request.getVectorCollectionsApiKey()
+        );
         return ResponseEntity.noContent();
     }
 }

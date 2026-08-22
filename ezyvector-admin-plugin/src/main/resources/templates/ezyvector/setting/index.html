@@ -36,6 +36,21 @@
         <form id="updateSettingsForm" onsubmit="return false;">
             <div class="col-12 mt-3"></div>
             <div class="form-group row">
+                <label for="vectorCollectionsApiKey" class="col-sm-3 col-form-label">
+                    [[#{vector_collections_api_key}]]
+                </label>
+                <div class="col-lg-7 col-md-6">
+                    <input type="password" name="vectorCollectionsApiKey" id="vectorCollectionsApiKey"
+                           class="form-control" th:placeholder="#{vector_collections_api_key}"
+                           th:value="${vectorCollectionsApiKey}"
+                           autocomplete="new-password">
+                </div>
+                <label id="vectorCollectionsApiKeyErrorLabel" class="col-lg-2 col-md-3 col-form-label text-danger d-none"
+                       for="vectorCollectionsApiKey">
+                    <i class="far fa-times-circle"></i> <span id="vectorCollectionsApiKeyError">[[#{invalid}]]</span>
+                </label>
+            </div>
+            <div class="form-group row">
                 <label for="knowledgeDataBuilderName" class="col-sm-3 col-form-label">
                     [[#{knowledge_data_builder}]]
                 </label>

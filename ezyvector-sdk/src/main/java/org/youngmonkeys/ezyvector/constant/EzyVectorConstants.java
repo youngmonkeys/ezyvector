@@ -29,6 +29,8 @@ public final class EzyVectorConstants {
 
     public static final String SETTING_NAME_VECTOR_DATA_DIR =
         "ezyrag_vector_data_dir";
+    public static final String SETTING_NAME_VECTOR_COLLECTIONS_API_KEY =
+        "ezyvector_vector_collections_api_key";
 
     private EzyVectorConstants() {}
 

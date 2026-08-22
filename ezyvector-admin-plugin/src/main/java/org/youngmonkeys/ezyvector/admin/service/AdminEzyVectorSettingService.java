@@ -14,36 +14,37 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.web.service;
+package org.youngmonkeys.ezyvector.admin.service;
 
 import com.tvd12.ezyhttp.server.core.annotation.Service;
-import org.youngmonkeys.ezyplatform.web.service.WebSettingService;
+import org.youngmonkeys.ezyplatform.admin.service.AdminSettingService;
 import org.youngmonkeys.ezyvector.service.EzyVectorSettingService;
 
+import static com.tvd12.ezyfox.io.EzyStrings.isNotBlank;
+import static org.youngmonkeys.ezyplatform.constant.CommonConstants.PATTERN_HIDDEN_PASSWORD;
 import static org.youngmonkeys.ezyvector.constant.EzyVectorConstants.SETTING_NAME_VECTOR_COLLECTIONS_API_KEY;
 
 @Service
-public class WebEzyVectorSettingService extends EzyVectorSettingService {
+public class AdminEzyVectorSettingService extends EzyVectorSettingService {
 
-    public WebEzyVectorSettingService(
-        WebSettingService settingService
+    private final AdminSettingService settingService;
+
+    public AdminEzyVectorSettingService(
+        AdminSettingService settingService
     ) {
         super(settingService);
-        settingService.addValueConverter(
-            SETTING_NAME_VECTOR_COLLECTIONS_API_KEY,
-            settingService::decryptValue
-        );
-        settingService.scheduleCacheValue(
-            SETTING_NAME_VECTOR_COLLECTIONS_API_KEY,
-            15
-        );
+        this.settingService = settingService;
     }
 
-    @Override
-    public String getVectorCollectionsApiKey() {
-        String value = settingService.getCachedValue(
-            SETTING_NAME_VECTOR_COLLECTIONS_API_KEY
-        );
-        return value != null ? value : super.getVectorCollectionsApiKey();
+    public void setVectorCollectionsApiKey(String value) {
+        if (
+            isNotBlank(value) &&
+                !value.matches(PATTERN_HIDDEN_PASSWORD)
+        ) {
+            settingService.setPasswordValue(
+                SETTING_NAME_VECTOR_COLLECTIONS_API_KEY,
+                value
+            );
+        }
     }
 }
