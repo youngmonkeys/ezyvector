@@ -14,7 +14,22 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.converter;
+package org.youngmonkeys.ezyvector.admin.response;
 
-public class EzyVectorModelToModelConverter {
+import lombok.Builder;
+import lombok.Getter;
+
+@Builder
+@Getter
+public class AdminEzyVectorCollectionResponse {
+    private long id;
+    private String name;
+    private long vectorSize;
+    private String distance;
+    private String indexType;
+    private String status;
+    private long pointsCount;
+    private String config;
+    private long createdAt;
+    private long updatedAt;
 }

@@ -27,6 +27,14 @@ public class EzyVectorCollectionService {
     private final EzyVectorCollectionRepository collectionRepository;
     private final EzyVectorEntityToModelConverter entityToModelConverter;
 
+    public EzyVectorCollectionModel getCollectionById(
+        long collectionId
+    ) {
+        return entityToModelConverter.toModel(
+            collectionRepository.findById(collectionId)
+        );
+    }
+
     public EzyVectorCollectionModel getCollectionByName(
         String collectionName
     ) {

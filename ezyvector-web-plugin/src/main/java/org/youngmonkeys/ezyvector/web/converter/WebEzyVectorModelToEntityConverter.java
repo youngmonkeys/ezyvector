@@ -29,9 +29,6 @@ public class WebEzyVectorModelToEntityConverter
         ClockProxy clock,
         ObjectMapper objectMapper
     ) {
-        super(
-            clock,
-            objectMapper
-        );
+        super(clock, objectMapper);
     }
 }

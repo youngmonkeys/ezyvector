@@ -14,21 +14,22 @@
  * limitations under the License.
 */
 
-package org.youngmonkeys.ezyvector.web.converter;
+package org.youngmonkeys.ezyvector.admin.response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tvd12.ezyfox.bean.annotation.EzySingleton;
-import org.youngmonkeys.ezyplatform.time.ClockProxy;
-import org.youngmonkeys.ezyvector.converter.EzyVectorEntityToModelConverter;
+import lombok.Builder;
+import lombok.Getter;
 
-@EzySingleton
-public class WebEzyVectorEntityToModelConverter
-    extends EzyVectorEntityToModelConverter {
-
-    public WebEzyVectorEntityToModelConverter(
-        ClockProxy clock,
-        ObjectMapper objectMapper
-    ) {
-        super(clock, objectMapper);
-    }
+@Builder
+@Getter
+public class AdminEzyVectorCollectionDetailsResponse {
+    private long id;
+    private String name;
+    private long vectorSize;
+    private String distance;
+    private String indexType;
+    private String status;
+    private long pointsCount;
+    private String config;
+    private long createdAt;
+    private long updatedAt;
 }

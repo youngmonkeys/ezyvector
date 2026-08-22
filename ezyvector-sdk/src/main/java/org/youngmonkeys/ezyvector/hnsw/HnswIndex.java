@@ -87,10 +87,10 @@ public class HnswIndex {
             removeNode(id);
             int level = randomLevel();
             Node node = new Node(id, normalized, level);
+            nodesById.put(id, node);
             if (entryPoint == null) {
                 entryPoint = node;
                 maxLevel = level;
-                nodesById.put(id, node);
                 return;
             }
             Node curr = entryPoint;
@@ -141,7 +141,6 @@ public class HnswIndex {
                     }
                 }
             }
-            nodesById.put(id, node);
             if (level > maxLevel) {
                 maxLevel = level;
                 entryPoint = node;
@@ -404,6 +403,7 @@ public class HnswIndex {
         return answer;
     }
 
+    @SuppressWarnings("MethodLength")
     private List<Candidate> searchLayer(
         float[] target,
         Node entry,
