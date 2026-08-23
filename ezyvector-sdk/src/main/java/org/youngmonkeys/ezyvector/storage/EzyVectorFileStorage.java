@@ -54,22 +54,6 @@ public class EzyVectorFileStorage {
         );
     }
 
-    public void upsert(
-        long collectionId,
-        long slotId,
-        long pointId,
-        int vectorSize,
-        float[] vector
-    ) throws IOException {
-        upsertAll(
-            collectionId,
-            vectorSize,
-            Collections.singletonList(
-                new VectorRecord(slotId, pointId, vector)
-            )
-        );
-    }
-
     public void upsertAll(
         long collectionId,
         long vectorSize,
@@ -132,7 +116,7 @@ public class EzyVectorFileStorage {
             || !Files.isRegularFile(pointIdsFile)) {
             return Collections.emptyList();
         }
-        long vectorByteSize = (long) vectorSize * Float.BYTES;
+        long vectorByteSize = vectorSize * Float.BYTES;
         try (
             FileChannel vectorChannel = FileChannel.open(
                 vectorsFile,
