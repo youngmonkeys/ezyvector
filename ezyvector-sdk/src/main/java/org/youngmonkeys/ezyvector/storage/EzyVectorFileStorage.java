@@ -50,8 +50,7 @@ public class EzyVectorFileStorage {
         String dataDir
     ) {
         this.dataDir = Paths.get(
-            fileSystemManager.getEzyHomePathString(),
-            dataDir
+            fileSystemManager.concatWithEzyHome(dataDir)
         );
     }
 
@@ -238,6 +237,7 @@ public class EzyVectorFileStorage {
         return Files.isRegularFile(getHnswPath(collectionId));
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void searchChunk(
         FileChannel vectorChannel,
         FileChannel pointIdChannel,
