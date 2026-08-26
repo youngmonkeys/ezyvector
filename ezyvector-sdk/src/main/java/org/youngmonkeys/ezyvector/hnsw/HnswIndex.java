@@ -43,6 +43,9 @@ public class HnswIndex {
 
     private static final int FILE_MAGIC = 0x455A4857;
     private static final int FILE_VERSION = 1;
+    private static final int UNSPECIFIED_VECTOR_SIZE = -1;
+    public static final int DEFAULT_MAX_M = 16;
+    public static final int DEFAULT_EF_CONSTRUCTION = 200;
 
     private final int maxM;
     private final int maxM0;
@@ -54,13 +57,32 @@ public class HnswIndex {
 
     private volatile Node entryPoint;
     private volatile int maxLevel = -1;
-    private volatile int vectorSize = -1;
+    @Getter
+    private volatile int vectorSize;
 
     public HnswIndex() {
-        this(16, 200);
+        this(
+            DEFAULT_MAX_M,
+            DEFAULT_EF_CONSTRUCTION
+        );
     }
 
-    public HnswIndex(int maxM, int efConstruction) {
+    public HnswIndex(
+        int maxM,
+        int efConstruction
+    ) {
+        this(
+            maxM,
+            efConstruction,
+            UNSPECIFIED_VECTOR_SIZE
+        );
+    }
+
+    public HnswIndex(
+        int maxM,
+        int efConstruction,
+        int vectorSize
+    ) {
         if (maxM <= 1) {
             throw new IllegalArgumentException(
                 "maxM must be greater than 1"
@@ -71,10 +93,16 @@ public class HnswIndex {
                 "efConstruction must be positive"
             );
         }
+        if (vectorSize <= 0 && vectorSize != UNSPECIFIED_VECTOR_SIZE) {
+            throw new IllegalArgumentException(
+                "vectorSize must be positive"
+            );
+        }
         this.maxM = maxM;
         this.maxM0 = maxM * 2;
         this.efConstruction = efConstruction;
         this.levelMultiplier = 1.0 / Math.log(maxM);
+        this.vectorSize = vectorSize;
     }
 
     @SuppressWarnings("MethodLength")

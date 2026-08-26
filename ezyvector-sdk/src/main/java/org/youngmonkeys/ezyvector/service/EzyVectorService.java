@@ -84,6 +84,19 @@ public class EzyVectorService extends EzyLoggable {
         startHnswBuildIfNecessary(collectionName);
     }
 
+    private void startHnswBuildIfNecessary(
+        String collectionName
+    ) {
+        EzyVectorCollectionVectorSizeResult collection =
+            collectionRepository.findVectorSizeByName(collectionName);
+        if (collection != null) {
+            startHnswBuildIfNecessary(
+                collection.getId(),
+                collection.getVectorSize()
+            );
+        }
+    }
+
     public void upsert(
         String collectionName,
         List<SaveVectorPointModel> points
@@ -96,7 +109,7 @@ public class EzyVectorService extends EzyLoggable {
         long vectorSize = collection.getVectorSize();
         ensureMutableSegment(collectionId);
         startBackfillIfNecessary(collectionId, vectorSize);
-        startHnswBuildIfNecessary(collectionId);
+        startHnswBuildIfNecessary(collectionId, vectorSize);
         EzyVectorFileStorage storage = newVectorFileStorage();
         synchronized (writeLock) {
             List<EzyVectorFileStorage.VectorRecord> records =
@@ -135,7 +148,7 @@ public class EzyVectorService extends EzyLoggable {
             );
             updateHnswIndex(collectionId, records);
         }
-        startHnswBuildIfNecessary(collectionId);
+        startHnswBuildIfNecessary(collectionId, vectorSize);
     }
 
     public List<EzyVectorSearchResultModel> search(
@@ -150,8 +163,11 @@ public class EzyVectorService extends EzyLoggable {
         long collectionId = collection.getId();
         long vectorSize = collection.getVectorSize();
         startBackfillIfNecessary(collectionId, vectorSize);
-        startHnswBuildIfNecessary(collectionId);
-        HnswIndex hnswIndex = getReadyHnswIndex(collectionId);
+        startHnswBuildIfNecessary(collectionId, vectorSize);
+        HnswIndex hnswIndex = getReadyHnswIndex(
+            collectionId,
+            vectorSize
+        );
         if (hnswIndex != null) {
             List<HnswIndex.SearchResult> hits = hnswIndex.search(
                 vector,
@@ -347,17 +363,8 @@ public class EzyVectorService extends EzyLoggable {
     }
 
     private void startHnswBuildIfNecessary(
-        String collectionName
-    ) {
-        IdResult collection = collectionRepository
-            .findIdByName(collectionName);
-        if (collection != null) {
-            startHnswBuildIfNecessary(collection.getId());
-        }
-    }
-
-    private void startHnswBuildIfNecessary(
-        long collectionId
+        long collectionId,
+        long vectorSize
     ) {
         if (readyHnswCollectionIds.contains(collectionId)) {
             return;
@@ -365,12 +372,21 @@ public class EzyVectorService extends EzyLoggable {
         EzyVectorFileStorage storage = newVectorFileStorage();
         if (storage.isHnswPresent(collectionId)) {
             try {
-                hnswIndexByCollectionId.put(
+                HnswIndex loaded =
+                    HnswIndex.load(storage.getHnswPath(collectionId));
+                if (loaded.getVectorSize() == (int) vectorSize) {
+                    hnswIndexByCollectionId.put(collectionId, loaded);
+                    readyHnswCollectionIds.add(collectionId);
+                    return;
+                }
+                logger.warn(
+                    "hnsw index file for vector collection: {} has " +
+                        "vectorSize: {} but collection is configured " +
+                        "with vectorSize: {}, rebuilding",
                     collectionId,
-                    HnswIndex.load(storage.getHnswPath(collectionId))
+                    loaded.getVectorSize(),
+                    vectorSize
                 );
-                readyHnswCollectionIds.add(collectionId);
-                return;
             } catch (Exception e) {
                 logger.warn(
                     "load hnsw index for vector collection: {} failed",
@@ -382,7 +398,12 @@ public class EzyVectorService extends EzyLoggable {
         if (!buildingHnswCollectionIds.add(collectionId)) {
             return;
         }
-        hnswIndexByCollectionId.put(collectionId, new HnswIndex());
+        HnswIndex index = new HnswIndex(
+            HnswIndex.DEFAULT_MAX_M,
+            HnswIndex.DEFAULT_EF_CONSTRUCTION,
+            (int) vectorSize
+        );
+        hnswIndexByCollectionId.put(collectionId, index);
         Thread thread = new Thread(
             () -> buildHnswIndex(collectionId),
             "ezyvector-vector-hnsw-build-" + collectionId
@@ -392,7 +413,8 @@ public class EzyVectorService extends EzyLoggable {
     }
 
     private HnswIndex getReadyHnswIndex(
-        long collectionId
+        long collectionId,
+        long vectorSize
     ) {
         if (!readyHnswCollectionIds.contains(collectionId)) {
             return null;
@@ -416,7 +438,7 @@ public class EzyVectorService extends EzyLoggable {
                 collectionId,
                 e
             );
-            startHnswBuildIfNecessary(collectionId);
+            startHnswBuildIfNecessary(collectionId, vectorSize);
             return null;
         }
     }
@@ -430,7 +452,12 @@ public class EzyVectorService extends EzyLoggable {
             return;
         }
         for (EzyVectorFileStorage.VectorRecord record : records) {
-            index.insert(record.getPointId(), record.getVector());
+            insertIntoHnswIndex(
+                index,
+                collectionId,
+                record.getPointId(),
+                record.getVector()
+            );
         }
         if (readyHnswCollectionIds.contains(collectionId)) {
             index
@@ -444,8 +471,12 @@ public class EzyVectorService extends EzyLoggable {
             HnswIndex index = hnswIndexByCollectionId
                 .get(collectionId);
             if (index == null) {
-                index = new HnswIndex();
-                hnswIndexByCollectionId.put(collectionId, index);
+                logger.warn(
+                    "no hnsw index bound to vector collection: {} " +
+                        "before build, skip",
+                    collectionId
+                );
+                return;
             }
             long lastId = ZERO_LONG;
             while (true) {
@@ -462,7 +493,12 @@ public class EzyVectorService extends EzyLoggable {
                     break;
                 }
                 for (EzyVectorCollectionPoint point : points) {
-                    index.insert(point.getPointId(), point.getVector());
+                    insertIntoHnswIndex(
+                        index,
+                        collectionId,
+                        point.getPointId(),
+                        point.getVector()
+                    );
                     lastId = point.getId();
                 }
             }
@@ -478,6 +514,24 @@ public class EzyVectorService extends EzyLoggable {
             );
         } finally {
             buildingHnswCollectionIds.remove(collectionId);
+        }
+    }
+
+    private void insertIntoHnswIndex(
+        HnswIndex index,
+        long collectionId,
+        long pointId,
+        float[] vector
+    ) {
+        try {
+            index.insert(pointId, vector);
+        } catch (IllegalArgumentException e) {
+            logger.warn(
+                "skip vector point: {} of collection: {} due to: {}",
+                pointId,
+                collectionId,
+                e.getMessage()
+            );
         }
     }
 

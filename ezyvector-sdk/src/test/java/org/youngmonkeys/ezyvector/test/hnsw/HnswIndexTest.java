@@ -770,6 +770,91 @@ public class HnswIndexTest {
         }
     }
 
+    @Test
+    public void shouldLockVectorSizeToFirstInsertedVectorRegardlessOfIntendedSize()
+        throws Exception {
+        HnswIndex index = new HnswIndex();
+        index.insert(1L, randomVector(new Random(1L), 128));
+
+        Assert.assertEquals(vectorSizeOf(index), 128);
+        Assert.assertThrows(
+            IllegalArgumentException.class,
+            () -> index.insert(2L, randomVector(new Random(2L), 384))
+        );
+    }
+
+    @Test
+    public void shouldPersistVectorSizeLockedByFirstInsertedVectorAcrossRestart()
+        throws Exception {
+        HnswIndex index = new HnswIndex();
+        index.insert(1L, randomVector(new Random(1L), 128));
+        Path file = tempFile("wrong-vector-size.dat");
+
+        index.save(file);
+        HnswIndex loaded = HnswIndex.load(file);
+
+        Assert.assertEquals(vectorSizeOf(loaded), 128);
+        Assert.assertThrows(
+            IllegalArgumentException.class,
+            () -> loaded.search(randomVector(new Random(2L), 384), 1, 64)
+        );
+    }
+
+    @Test
+    public void shouldExposeVectorSizePassedToConstructor() {
+        HnswIndex index = new HnswIndex(16, 200, 384);
+
+        Assert.assertEquals(index.getVectorSize(), 384);
+    }
+
+    @Test
+    public void shouldRejectFirstInsertNotMatchingConstructorVectorSize() {
+        HnswIndex index = new HnswIndex(16, 200, 384);
+
+        Assert.assertThrows(
+            IllegalArgumentException.class,
+            () -> index.insert(1L, randomVector(new Random(1L), 128))
+        );
+        Assert.assertEquals(index.size(), 0);
+        Assert.assertEquals(index.getVectorSize(), 384);
+    }
+
+    @Test
+    public void shouldKeepConstructorVectorSizeAfterInsertingMatchingVector() {
+        HnswIndex index = new HnswIndex(16, 200, 384);
+
+        index.insert(1L, randomVector(new Random(1L), 384));
+
+        Assert.assertEquals(index.getVectorSize(), 384);
+        Assert.assertEquals(index.size(), 1);
+    }
+
+    @Test
+    public void shouldPersistConstructorVectorSizeAcrossRestartEvenWhenEmpty()
+        throws IOException {
+        HnswIndex index = new HnswIndex(16, 200, 384);
+        Path file = tempFile("empty-with-vector-size.dat");
+
+        index.save(file);
+        HnswIndex loaded = HnswIndex.load(file);
+
+        Assert.assertEquals(loaded.getVectorSize(), 384);
+        Assert.assertThrows(
+            IllegalArgumentException.class,
+            () -> loaded.insert(1L, randomVector(new Random(1L), 128))
+        );
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void shouldThrowWhenConstructorVectorSizeIsZero() {
+        new HnswIndex(16, 200, 0);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void shouldThrowWhenConstructorVectorSizeIsNegative() {
+        new HnswIndex(16, 200, -5);
+    }
+
     @Test(expectedExceptions = IOException.class)
     public void shouldThrowWhenLoadingFileWithInvalidMagicHeader()
         throws IOException {
@@ -1179,6 +1264,10 @@ public class HnswIndexTest {
 
     private static int maxLevelOf(HnswIndex index) throws Exception {
         return (int) getField(index, "maxLevel");
+    }
+
+    private static int vectorSizeOf(HnswIndex index) throws Exception {
+        return (int) getField(index, "vectorSize");
     }
 
     private static long idOf(Object node) throws Exception {
