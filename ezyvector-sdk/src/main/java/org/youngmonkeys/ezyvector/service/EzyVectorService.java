@@ -84,19 +84,6 @@ public class EzyVectorService extends EzyLoggable {
         startHnswBuildIfNecessary(collectionName);
     }
 
-    private void startHnswBuildIfNecessary(
-        String collectionName
-    ) {
-        EzyVectorCollectionVectorSizeResult collection =
-            collectionRepository.findVectorSizeByName(collectionName);
-        if (collection != null) {
-            startHnswBuildIfNecessary(
-                collection.getId(),
-                collection.getVectorSize()
-            );
-        }
-    }
-
     public void upsert(
         String collectionName,
         List<SaveVectorPointModel> points
@@ -359,6 +346,19 @@ public class EzyVectorService extends EzyLoggable {
             );
         } finally {
             backfillingCollectionIds.remove(collectionId);
+        }
+    }
+
+    private void startHnswBuildIfNecessary(
+        String collectionName
+    ) {
+        EzyVectorCollectionVectorSizeResult collection =
+            collectionRepository.findVectorSizeByName(collectionName);
+        if (collection != null) {
+            startHnswBuildIfNecessary(
+                collection.getId(),
+                collection.getVectorSize()
+            );
         }
     }
 
