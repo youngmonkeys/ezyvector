@@ -53,7 +53,6 @@ public class EzyVectorCollectionSegment {
     @Column(name = "segment_type")
     private String segmentType;
 
-    @Column(name = "status")
     private String status;
 
     @Column(name = "points_count")

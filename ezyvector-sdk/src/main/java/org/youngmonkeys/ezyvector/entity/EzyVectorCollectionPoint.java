@@ -52,13 +52,10 @@ public class EzyVectorCollectionPoint {
 
     private float[] vector;
 
-    @Column(name = "payload")
     private String payload;
 
-    @Column(name = "status")
     private String status;
 
-    @Column(name = "version")
     private long version;
 
     @Column(name = "created_at")

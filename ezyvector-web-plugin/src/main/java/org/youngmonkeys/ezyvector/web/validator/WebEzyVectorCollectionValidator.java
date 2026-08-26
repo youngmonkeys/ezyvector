@@ -218,7 +218,7 @@ public class WebEzyVectorCollectionValidator {
             if (isBlank(distance)) {
                 errors.put("vectors.distance", "required");
             } else if (EzyVectorDistance.of(distance) == null) {
-                errors.put("vectors.distance", "required");
+                errors.put("vectors.distance", "invalid");
             }
             if (!errors.isEmpty()) {
                 throw new HttpBadRequestException(errors);
