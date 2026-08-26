@@ -1,0 +1,14 @@
+title = "ezyvector gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "known false positives: these are setting/label names, not actual secret values"
+regexes = [
+  '''vector_collections_api_key\s*=''',
+  '''mysql_access_token\s*=''',
+  '''SETTING_NAME_[A-Z_]*API_KEY''',
+  '''SETTING_NAME_[A-Z_]*ACCESS_TOKEN''',
+  '''HEADER_NAME_API_KEY''',
+]
