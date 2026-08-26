@@ -1,0 +1,911 @@
+<!--
+ ~ Copyright 2026 youngmonkeys.org
+ ~
+ ~ Licensed under the ezyplatform, Version 1.0.0 (the "License");
+ ~ you may not use this file except in compliance with the License.
+ ~ You may obtain a copy of the License at
+ ~
+ ~     https://youngmonkeys.org/licenses/ezyplatform-1.0.0.txt
+ ~
+ ~ Unless required by applicable law or agreed to in writing, software
+ ~ distributed under the License is distributed on an "AS IS" BASIS,
+ ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ~ See the License for the specific language governing permissions and
+ ~ limitations under the License.
+-->
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HNSW Visual Playground</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        background: #0f1117;
+        color: #e5e7eb;
+        padding: 24px;
+    }
+    h1 {
+        font-size: 22px;
+        margin: 0 0 4px;
+    }
+    .subtitle {
+        color: #9ca3af;
+        margin: 0 0 16px;
+        font-size: 14px;
+        max-width: 900px;
+        line-height: 1.5;
+    }
+    .intro {
+        background: #171a23;
+        border: 1px solid #262b38;
+        border-radius: 10px;
+        padding: 16px 18px;
+        margin-bottom: 18px;
+        font-size: 13px;
+        line-height: 1.7;
+        color: #d1d5db;
+        max-width: 1400px;
+    }
+    .intro b { color: #93c5fd; }
+    .layout {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 16px;
+        align-items: start;
+    }
+    .card {
+        background: #171a23;
+        border: 1px solid #262b38;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 14px;
+    }
+    .card h2 {
+        font-size: 14px;
+        margin: 0 0 12px;
+        color: #93c5fd;
+    }
+    .row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+        align-items: center;
+    }
+    .row label {
+        width: 90px;
+        flex-shrink: 0;
+        font-size: 12px;
+        color: #9ca3af;
+    }
+    input[type=text], input[type=number], select {
+        flex: 1;
+        width: 100%;
+        background: #0f1117;
+        border: 1px solid #2d3242;
+        color: #e5e7eb;
+        border-radius: 6px;
+        padding: 7px 9px;
+        font-size: 13px;
+        font-family: inherit;
+    }
+    .hint {
+        font-size: 11.5px;
+        color: #6b7280;
+        margin: -4px 0 10px;
+        line-height: 1.5;
+    }
+    button {
+        cursor: pointer;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 12.5px;
+        font-weight: 600;
+    }
+    button.btn-random {
+        background: #2d3242;
+        color: #e5e7eb;
+    }
+    button.btn-random:hover { background: #3a4156; }
+    button.btn-primary {
+        background: #3b82f6;
+        color: #fff;
+    }
+    button.btn-primary:hover { background: #2563eb; }
+    button.btn-danger {
+        background: #7f1d1d;
+        color: #fecaca;
+    }
+    button.btn-danger:hover { background: #991b1b; }
+    button.btn-mode {
+        background: #1f2430;
+        color: #9ca3af;
+        border: 1px solid #2d3242;
+    }
+    button.btn-mode.active {
+        background: #1d4ed8;
+        color: #fff;
+        border-color: #1d4ed8;
+    }
+    .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+    }
+    .mode-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .mode-row button { flex: 1; }
+    .canvas-wrap {
+        background: #171a23;
+        border: 1px solid #262b38;
+        border-radius: 10px;
+        padding: 14px;
+    }
+    .canvas-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .layer-tabs {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+    .layer-tabs button {
+        background: #1f2430;
+        color: #9ca3af;
+        border: 1px solid #2d3242;
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+    .layer-tabs button.active {
+        background: #3b82f6;
+        color: #fff;
+        border-color: #3b82f6;
+    }
+    .legend {
+        font-size: 11.5px;
+        color: #9ca3af;
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+    .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    canvas {
+        display: block;
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+        background: #0b0d12;
+        border: 1px solid #262b38;
+        border-radius: 8px;
+        cursor: crosshair;
+    }
+    .replay-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+    }
+    .replay-bar button {
+        background: #2d3242;
+        color: #e5e7eb;
+    }
+    .replay-bar button:hover { background: #3a4156; }
+    .replay-bar select {
+        width: auto;
+    }
+    #stepCounter {
+        font-size: 12px;
+        color: #9ca3af;
+        min-width: 90px;
+    }
+    .explain-box {
+        margin-top: 12px;
+        background: #0b0d12;
+        border: 1px solid #262b38;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 13.5px;
+        line-height: 1.6;
+        min-height: 46px;
+    }
+    .explain-box .layer-badge {
+        display: inline-block;
+        background: #1d4ed8;
+        color: #fff;
+        border-radius: 5px;
+        padding: 1px 7px;
+        font-size: 11px;
+        margin-right: 6px;
+        font-weight: 700;
+    }
+    .results-box {
+        margin-top: 12px;
+    }
+    .result-item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12.5px;
+        padding: 5px 8px;
+        border-bottom: 1px solid #1f2430;
+        color: #d1d5db;
+    }
+    .log-card {
+        margin-top: 16px;
+    }
+    .log {
+        max-height: 260px;
+        overflow: auto;
+        font-size: 12.5px;
+        line-height: 1.7;
+    }
+    .log-entry {
+        border-left: 3px solid #2d3242;
+        padding: 4px 10px;
+        margin-bottom: 8px;
+    }
+    .log-entry.insert { border-left-color: #34d399; }
+    .log-entry.search { border-left-color: #fbbf24; }
+    .log-entry.reset { border-left-color: #f87171; }
+    .log-entry.remove { border-left-color: #f87171; }
+    .log-entry .log-title {
+        font-weight: 700;
+        color: #e5e7eb;
+        margin-bottom: 3px;
+    }
+    .log-entry div { color: #9ca3af; }
+</style>
+</head>
+<body>
+
+<h1>HNSW Visual Playground</h1>
+<p class="subtitle">
+    Công cụ trực quan để học thuật toán <b>HNSW (Hierarchical Navigable Small World)</b> —
+    dùng chính class <code>HnswIndex</code> của EzyVector ở phía server (dữ liệu 2 chiều để vẽ được lên canvas),
+    mọi thao tác Thêm điểm / Tìm kiếm đều chạy thật trên thuật toán, không giả lập.
+</p>
+
+<div class="intro">
+    <b>Ý tưởng cốt lõi của HNSW:</b> đồ thị được tổ chức thành nhiều <b>tầng (layer)</b> giống cấu trúc
+    <b>skip list</b>. Mỗi điểm dữ liệu khi thêm vào sẽ được gán một <b>level ngẫu nhiên</b> theo phân phối
+    suy giảm mũ (càng lên cao càng hiếm điểm) — điểm có level cao xuất hiện ở nhiều tầng, đóng vai trò
+    "đường cao tốc" giúp nhảy xa qua đồ thị. Khi <b>tìm kiếm</b>: thuật toán bắt đầu từ
+    <b>entry point</b> ở tầng cao nhất, đi tham lam (greedy) sang láng giềng gần điểm truy vấn hơn tại mỗi
+    tầng, xuống dần tầng thấp hơn; khi chạm tầng 0 (tầng chứa toàn bộ điểm) thì chuyển sang
+    <b>beam search</b> với tham số <b>ef</b> để dò rộng hơn và chọn ra top-k kết quả gần nhất. Tham số
+    <b>maxM</b> là số láng giềng tối đa mỗi tầng, <b>efConstruction</b> là độ rộng tìm kiếm khi xây dựng chỉ mục
+    (càng lớn thì đồ thị càng chính xác nhưng insert càng chậm).
+</div>
+
+<div class="layout">
+
+<div>
+    <div class="card">
+        <h2>1. Cấu hình chỉ mục</h2>
+        <div class="row">
+            <label for="maxMInput">maxM</label>
+            <input type="number" id="maxMInput" min="2" value="5">
+        </div>
+        <div class="hint">Số láng giềng tối đa mỗi node giữ ở mỗi tầng. Giá trị nhỏ (4-6) giúp dễ quan sát nhiều tầng hơn khi số điểm ít.</div>
+        <div class="row">
+            <label for="efConstructionInput">efConstruction</label>
+            <input type="number" id="efConstructionInput" min="1" value="50">
+        </div>
+        <div class="hint">Độ rộng tìm kiếm lúc xây dựng đồ thị (insert). Càng lớn đồ thị càng chuẩn nhưng càng chậm.</div>
+        <div class="actions">
+            <button type="button" class="btn-danger" onclick="resetIndex()">↺ Khởi tạo lại chỉ mục</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>2. Thêm điểm dữ liệu</h2>
+        <div class="row">
+            <label for="insertIdInput">ID</label>
+            <input type="number" id="insertIdInput" placeholder="để trống = tự sinh">
+        </div>
+        <div class="row">
+            <label for="insertXInput">x</label>
+            <input type="number" id="insertXInput" step="0.1" value="0">
+        </div>
+        <div class="row">
+            <label for="insertYInput">y</label>
+            <input type="number" id="insertYInput" step="0.1" value="0">
+        </div>
+        <div class="actions">
+            <button type="button" class="btn-random" onclick="randomizeInsertPoint()">🎲 Ngẫu nhiên</button>
+            <button type="button" class="btn-primary" onclick="insertPoint()">+ Thêm điểm</button>
+        </div>
+        <div class="hint" style="margin-top:8px;">
+            Mẹo: bấm nút "➕ Thêm điểm bằng click" bên dưới rồi click thẳng lên canvas để thêm điểm tại đúng toạ độ đó.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>3. Xoá điểm</h2>
+        <div class="row">
+            <label for="removeIdInput">ID</label>
+            <input type="number" id="removeIdInput">
+        </div>
+        <div class="actions">
+            <button type="button" class="btn-danger" onclick="removePoint()">🗑 Xoá</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>4. Tìm kiếm (Search)</h2>
+        <div class="row">
+            <label for="searchXInput">x</label>
+            <input type="number" id="searchXInput" step="0.1" value="0">
+        </div>
+        <div class="row">
+            <label for="searchYInput">y</label>
+            <input type="number" id="searchYInput" step="0.1" value="0">
+        </div>
+        <div class="row">
+            <label for="kInput">k</label>
+            <input type="number" id="kInput" min="1" value="3">
+        </div>
+        <div class="row">
+            <label for="efInput">ef</label>
+            <input type="number" id="efInput" min="1" value="20">
+        </div>
+        <div class="actions">
+            <button type="button" class="btn-random" onclick="randomizeSearchPoint()">🎲 Ngẫu nhiên</button>
+            <button type="button" class="btn-primary" onclick="runSearch()">🔍 Tìm kiếm</button>
+        </div>
+        <div class="hint" style="margin-top:8px;">
+            Mẹo: chuyển chế độ click sang "🔍 Chọn điểm truy vấn" rồi click lên canvas để chọn toạ độ truy vấn.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Chế độ click chuột trên canvas</h2>
+        <div class="mode-row">
+            <button type="button" id="modeInsertBtn" class="btn-mode active" onclick="setClickMode('insert')">➕ Thêm điểm bằng click</button>
+        </div>
+        <div class="mode-row">
+            <button type="button" id="modeSearchBtn" class="btn-mode" onclick="setClickMode('search')">🔍 Chọn điểm truy vấn</button>
+        </div>
+        <div class="mode-row">
+            <button type="button" id="modeNoneBtn" class="btn-mode" onclick="setClickMode('none')">🚫 Tắt click</button>
+        </div>
+    </div>
+</div>
+
+<div>
+    <div class="canvas-wrap">
+        <div class="canvas-top-row">
+            <div class="layer-tabs" id="layerTabs"></div>
+            <div class="legend" id="legendBox"></div>
+        </div>
+        <canvas id="graphCanvas" width="860" height="620"></canvas>
+
+        <div class="replay-bar">
+            <button type="button" onclick="stepTo(0)">⏮ Đầu</button>
+            <button type="button" onclick="stepBy(-1)">◀ Trước</button>
+            <button type="button" id="playBtn" onclick="togglePlay()">▶ Phát</button>
+            <button type="button" onclick="stepBy(1)">Sau ▶</button>
+            <button type="button" onclick="stepTo(searchSteps.length - 1)">Cuối ⏭</button>
+            <span id="stepCounter">Bước -/-</span>
+            <select id="speedSelect">
+                <option value="1400">Chậm</option>
+                <option value="700" selected>Vừa</option>
+                <option value="250">Nhanh</option>
+            </select>
+        </div>
+
+        <div class="explain-box" id="explainBox">
+            Chưa có bước tìm kiếm nào. Hãy thêm vài điểm rồi bấm "Tìm kiếm" để xem HNSW hoạt động từng bước.
+        </div>
+
+        <div class="results-box" id="resultsBox"></div>
+    </div>
+
+    <div class="card log-card">
+        <h2>Nhật ký thao tác</h2>
+        <div class="log" id="logBox"></div>
+    </div>
+</div>
+
+</div>
+
+<script>
+var graph = { nodes: [], edges: [], maxLevel: -1, entryPointId: null, maxM: 0, efConstruction: 0 };
+var currentLayerFilter = 'all';
+var clickMode = 'insert';
+var searchSteps = [];
+var searchStepIndex = -1;
+var searchResults = [];
+var lastQueryPoint = null;
+var playTimer = null;
+
+var PALETTE = ['#60a5fa', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#f87171', '#22d3ee'];
+
+function colorForLevel(level) {
+    return PALETTE[level % PALETTE.length];
+}
+
+function randomFloat(min, max, decimals) {
+    var v = Math.random() * (max - min) + min;
+    return parseFloat(v.toFixed(decimals || 2));
+}
+
+function appendLog(type, title, lines) {
+    var box = document.getElementById('logBox');
+    var entry = document.createElement('div');
+    entry.className = 'log-entry ' + type;
+    var html = '<div class="log-title">' + title + '</div>';
+    lines.forEach(function (line) {
+        html += '<div>' + line + '</div>';
+    });
+    entry.innerHTML = html;
+    box.insertBefore(entry, box.firstChild);
+}
+
+function callApi(method, url, body) {
+    return fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: body !== undefined ? JSON.stringify(body) : undefined
+    }).then(function (response) {
+        return response.json();
+    });
+}
+
+function nodeById(id) {
+    for (var i = 0; i < graph.nodes.length; i++) {
+        if (graph.nodes[i].id === id) {
+            return graph.nodes[i];
+        }
+    }
+    return null;
+}
+
+function renderLayerTabs() {
+    var box = document.getElementById('layerTabs');
+    box.innerHTML = '';
+    var allBtn = document.createElement('button');
+    allBtn.textContent = 'Tất cả tầng';
+    allBtn.className = currentLayerFilter === 'all' ? 'active' : '';
+    allBtn.onclick = function () { currentLayerFilter = 'all'; renderLayerTabs(); draw(); };
+    box.appendChild(allBtn);
+    for (var lv = graph.maxLevel; lv >= 0; lv--) {
+        (function (layer) {
+            var btn = document.createElement('button');
+            btn.textContent = 'Tầng ' + layer;
+            btn.className = String(currentLayerFilter) === String(layer) ? 'active' : '';
+            btn.onclick = function () { currentLayerFilter = layer; renderLayerTabs(); draw(); };
+            box.appendChild(btn);
+        })(lv);
+    }
+}
+
+function renderLegend() {
+    var box = document.getElementById('legendBox');
+    var maxLv = Math.max(graph.maxLevel, 0);
+    var html = '';
+    for (var lv = 0; lv <= maxLv; lv++) {
+        html += '<span><span class="dot" style="background:' + colorForLevel(lv) + '"></span>Tầng ' + lv + '</span>';
+    }
+    html += '<span><span class="dot" style="background:#0b0d12;border:2px solid #facc15"></span>Entry point</span>';
+    html += '<span><span class="dot" style="background:#f87171"></span>Điểm truy vấn</span>';
+    html += '<span><span class="dot" style="background:#34d399;border:2px solid #34d399"></span>Kết quả top-k</span>';
+    box.innerHTML = html;
+}
+
+function computeBounds() {
+    if (graph.nodes.length === 0) {
+        return { minX: -5, maxX: 5, minY: -5, maxY: 5 };
+    }
+    var xs = graph.nodes.map(function (n) { return n.x; });
+    var ys = graph.nodes.map(function (n) { return n.y; });
+    if (lastQueryPoint) {
+        xs.push(lastQueryPoint.x);
+        ys.push(lastQueryPoint.y);
+    }
+    var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs);
+    var minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
+    if (maxX - minX < 1) { maxX += 0.5; minX -= 0.5; }
+    if (maxY - minY < 1) { maxY += 0.5; minY -= 0.5; }
+    var padX = (maxX - minX) * 0.18;
+    var padY = (maxY - minY) * 0.18;
+    return { minX: minX - padX, maxX: maxX + padX, minY: minY - padY, maxY: maxY + padY };
+}
+
+function toCanvas(x, y, bounds, canvas) {
+    var w = canvas.width, h = canvas.height;
+    var cx = (x - bounds.minX) / (bounds.maxX - bounds.minX) * (w - 60) + 30;
+    var cy = h - ((y - bounds.minY) / (bounds.maxY - bounds.minY) * (h - 60) + 30);
+    return { cx: cx, cy: cy };
+}
+
+function toLogical(px, py, bounds, canvas) {
+    var w = canvas.width, h = canvas.height;
+    var x = bounds.minX + (px - 30) / (w - 60) * (bounds.maxX - bounds.minX);
+    var y = bounds.minY + (h - py - 30) / (h - 60) * (bounds.maxY - bounds.minY);
+    return { x: x, y: y };
+}
+
+function draw() {
+    var canvas = document.getElementById('graphCanvas');
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    var bounds = computeBounds();
+
+    graph.edges.forEach(function (e) {
+        if (currentLayerFilter !== 'all' && String(e.layer) !== String(currentLayerFilter)) {
+            return;
+        }
+        var a = nodeById(e.from), b = nodeById(e.to);
+        if (!a || !b) {
+            return;
+        }
+        var pa = toCanvas(a.x, a.y, bounds, canvas), pb = toCanvas(b.x, b.y, bounds, canvas);
+        ctx.beginPath();
+        ctx.moveTo(pa.cx, pa.cy);
+        ctx.lineTo(pb.cx, pb.cy);
+        ctx.strokeStyle = colorForLevel(e.layer);
+        ctx.globalAlpha = e.layer === 0 ? 0.3 : 0.8;
+        ctx.lineWidth = 1 + e.layer * 0.5;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+    });
+
+    graph.nodes.forEach(function (n) {
+        if (currentLayerFilter !== 'all' && n.level < parseInt(currentLayerFilter, 10)) {
+            return;
+        }
+        var p = toCanvas(n.x, n.y, bounds, canvas);
+        var r = 6 + n.level * 3;
+        var isResult = searchResults.some(function (res) { return res.id === n.id; });
+        ctx.beginPath();
+        ctx.arc(p.cx, p.cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = colorForLevel(n.level);
+        ctx.fill();
+        if (graph.entryPointId === n.id) {
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#facc15';
+            ctx.stroke();
+        } else if (isResult) {
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#34d399';
+            ctx.stroke();
+        } else {
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#0b0d12';
+            ctx.stroke();
+        }
+        ctx.fillStyle = '#e5e7eb';
+        ctx.font = '11px sans-serif';
+        ctx.fillText(n.id + ' (L' + n.level + ')', p.cx + r + 4, p.cy + 4);
+    });
+
+    drawSearchOverlay(bounds, canvas, ctx);
+}
+
+function drawSearchOverlay(bounds, canvas, ctx) {
+    if (lastQueryPoint) {
+        var q = toCanvas(lastQueryPoint.x, lastQueryPoint.y, bounds, canvas);
+        ctx.beginPath();
+        ctx.moveTo(q.cx - 8, q.cy);
+        ctx.lineTo(q.cx, q.cy - 8);
+        ctx.lineTo(q.cx + 8, q.cy);
+        ctx.lineTo(q.cx, q.cy + 8);
+        ctx.closePath();
+        ctx.fillStyle = '#f87171';
+        ctx.fill();
+    }
+    if (searchStepIndex < 0 || searchSteps.length === 0) {
+        return;
+    }
+    var greedyPath = [];
+    for (var i = 0; i <= searchStepIndex; i++) {
+        var s = searchSteps[i];
+        var p = toCanvas(s.x, s.y, bounds, canvas);
+        if (s.visitedOnly) {
+            ctx.beginPath();
+            ctx.arc(p.cx, p.cy, 3, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(226,232,240,0.55)';
+            ctx.fill();
+        } else {
+            greedyPath.push(p);
+        }
+    }
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    greedyPath.forEach(function (p, i) {
+        if (i === 0) { ctx.moveTo(p.cx, p.cy); } else { ctx.lineTo(p.cx, p.cy); }
+    });
+    ctx.stroke();
+
+    var cur = searchSteps[searchStepIndex];
+    var pc = toCanvas(cur.x, cur.y, bounds, canvas);
+    ctx.beginPath();
+    ctx.arc(pc.cx, pc.cy, 12, 0, Math.PI * 2);
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#ffffff';
+    ctx.stroke();
+}
+
+function setClickMode(mode) {
+    clickMode = mode;
+    ['modeInsertBtn', 'modeSearchBtn', 'modeNoneBtn'].forEach(function (id) {
+        document.getElementById(id).classList.remove('active');
+    });
+    var map = { insert: 'modeInsertBtn', search: 'modeSearchBtn', none: 'modeNoneBtn' };
+    document.getElementById(map[mode]).classList.add('active');
+}
+
+function onCanvasClick(evt) {
+    if (clickMode === 'none') {
+        return;
+    }
+    var canvas = document.getElementById('graphCanvas');
+    var rect = canvas.getBoundingClientRect();
+    var px = (evt.clientX - rect.left) * (canvas.width / rect.width);
+    var py = (evt.clientY - rect.top) * (canvas.height / rect.height);
+    var bounds = computeBounds();
+    var logical = toLogical(px, py, bounds, canvas);
+    if (clickMode === 'insert') {
+        document.getElementById('insertXInput').value = logical.x.toFixed(2);
+        document.getElementById('insertYInput').value = logical.y.toFixed(2);
+        insertPoint();
+    } else if (clickMode === 'search') {
+        document.getElementById('searchXInput').value = logical.x.toFixed(2);
+        document.getElementById('searchYInput').value = logical.y.toFixed(2);
+        runSearch();
+    }
+}
+
+function randomizeInsertPoint() {
+    var b = computeBounds();
+    document.getElementById('insertXInput').value = randomFloat(b.minX, b.maxX, 2);
+    document.getElementById('insertYInput').value = randomFloat(b.minY, b.maxY, 2);
+}
+
+function randomizeSearchPoint() {
+    var b = computeBounds();
+    document.getElementById('searchXInput').value = randomFloat(b.minX, b.maxX, 2);
+    document.getElementById('searchYInput').value = randomFloat(b.minY, b.maxY, 2);
+}
+
+function applyGraph(g) {
+    graph = g;
+    renderLayerTabs();
+    renderLegend();
+    draw();
+}
+
+function resetIndex() {
+    var maxM = parseInt(document.getElementById('maxMInput').value, 10) || 5;
+    var efConstruction = parseInt(document.getElementById('efConstructionInput').value, 10) || 50;
+    searchSteps = [];
+    searchStepIndex = -1;
+    searchResults = [];
+    lastQueryPoint = null;
+    stopPlay();
+    updateStepCounter();
+    document.getElementById('explainBox').innerHTML =
+        'Chưa có bước tìm kiếm nào. Hãy thêm vài điểm rồi bấm "Tìm kiếm" để xem HNSW hoạt động từng bước.';
+    document.getElementById('resultsBox').innerHTML = '';
+    callApi('POST', '/test/hnsw/reset', { maxM: maxM, efConstruction: efConstruction })
+        .then(function (g) {
+            applyGraph(g);
+            appendLog('reset', 'Khởi tạo lại chỉ mục', [
+                'maxM = ' + g.maxM + ', efConstruction = ' + g.efConstruction + '.',
+                'Toàn bộ điểm dữ liệu cũ đã bị xoá, đồ thị HNSW bắt đầu lại từ rỗng.'
+            ]);
+        });
+}
+
+function insertPoint() {
+    var idRaw = document.getElementById('insertIdInput').value;
+    var x = parseFloat(document.getElementById('insertXInput').value);
+    var y = parseFloat(document.getElementById('insertYInput').value);
+    if (isNaN(x) || isNaN(y)) {
+        return;
+    }
+    var body = { x: x, y: y };
+    if (idRaw !== '') {
+        body.id = parseInt(idRaw, 10);
+    }
+    callApi('POST', '/test/hnsw/insert', body).then(function (resp) {
+        applyGraph(resp.graph);
+        document.getElementById('insertIdInput').value = '';
+        appendLog('insert', 'Thêm node ' + resp.id + ' tại (' + x.toFixed(2) + ', ' + y.toFixed(2) + ')', explainInsert(resp));
+    });
+}
+
+function explainInsert(resp) {
+    var lines = [];
+    lines.push(
+        'Level được gán ngẫu nhiên theo phân phối suy giảm mũ (floor(-ln(r) / ln(maxM))) = <b>' + resp.level + '</b>.' +
+        (resp.level > 0
+            ? ' Level càng cao càng hiếm gặp — node này sẽ đóng vai trò "đường tắt" ở các tầng trên.'
+            : ' Level 0 nghĩa là node chỉ tồn tại ở tầng đáy, không phải điểm trung chuyển.')
+    );
+    if (resp.newEntryPoint) {
+        lines.push('Vì level này cao hơn mọi node trước đó, node <b>' + resp.id + '</b> trở thành <b>entry point</b> mới của toàn bộ chỉ mục.');
+    }
+    for (var layer = resp.level; layer >= 0; layer--) {
+        var neighbors = [];
+        resp.graph.edges.forEach(function (e) {
+            if (e.layer !== layer) {
+                return;
+            }
+            if (e.from === resp.id) { neighbors.push(e.to); }
+            else if (e.to === resp.id) { neighbors.push(e.from); }
+        });
+        lines.push(
+            'Tầng ' + layer + ': tìm và nối với ' + neighbors.length + ' láng giềng gần nhất ' +
+            (neighbors.length ? ('[' + neighbors.join(', ') + ']') : '(chưa có node nào khác ở tầng này)') + '.'
+        );
+    }
+    return lines;
+}
+
+function removePoint() {
+    var idRaw = document.getElementById('removeIdInput').value;
+    if (idRaw === '') {
+        return;
+    }
+    var id = parseInt(idRaw, 10);
+    callApi('POST', '/test/hnsw/remove', { id: id }).then(function (g) {
+        applyGraph(g);
+        appendLog('remove', 'Xoá node ' + id, ['Node đã được đánh dấu xoá khỏi chỉ mục và không còn xuất hiện trong kết quả tìm kiếm.']);
+    });
+}
+
+function runSearch() {
+    var x = parseFloat(document.getElementById('searchXInput').value);
+    var y = parseFloat(document.getElementById('searchYInput').value);
+    var k = parseInt(document.getElementById('kInput').value, 10) || 3;
+    var ef = parseInt(document.getElementById('efInput').value, 10) || 20;
+    if (isNaN(x) || isNaN(y)) {
+        return;
+    }
+    lastQueryPoint = { x: x, y: y };
+    callApi('POST', '/test/hnsw/search', { x: x, y: y, k: k, ef: ef }).then(function (resp) {
+        searchSteps = resp.steps;
+        searchResults = resp.results;
+        searchStepIndex = searchSteps.length > 0 ? 0 : -1;
+        renderResults(resp);
+        updateExplain();
+        updateStepCounter();
+        draw();
+        appendLog('search', 'Tìm kiếm quanh (' + x.toFixed(2) + ', ' + y.toFixed(2) + '), k=' + k + ', ef=' + ef, [
+            'Tổng cộng ' + searchSteps.length + ' bước duyệt qua các tầng, tìm được ' + searchResults.length + ' kết quả gần nhất.',
+            'Dùng thanh "Phát lại" bên trên canvas để xem lại từng bước.'
+        ]);
+    });
+}
+
+function renderResults(resp) {
+    var box = document.getElementById('resultsBox');
+    if (!resp.results.length) {
+        box.innerHTML = '<div class="hint">Không tìm thấy kết quả (đồ thị đang rỗng?).</div>';
+        return;
+    }
+    var html = '<div class="hint">Kết quả top-' + resp.k + ' (điểm số càng gần 1 càng giống điểm truy vấn):</div>';
+    resp.results.forEach(function (r, i) {
+        html += '<div class="result-item"><span>#' + (i + 1) + ' — node ' + r.id + ' (' + r.x.toFixed(2) + ', ' + r.y.toFixed(2) + ')</span><span>score = ' + r.score.toFixed(4) + '</span></div>';
+    });
+    box.innerHTML = html;
+}
+
+function explainStep(step, index) {
+    var prefix = '';
+    if (index > 0 && searchSteps[index - 1].layer > 0 && step.layer === 0) {
+        prefix = '<div style="color:#fbbf24;margin-bottom:4px;">→ Đã xuống đến tầng 0 (tầng chứa toàn bộ điểm) — chuyển sang <b>beam search</b> với ef để dò rộng hơn.</div>';
+    }
+    var badge = '<span class="layer-badge">Tầng ' + step.layer + '</span>';
+    var body;
+    if (index === 0) {
+        body = 'Bắt đầu tại <b>entry point</b> (node ' + step.nodeId + ') — khoảng cách tới điểm truy vấn: ' + step.distance.toFixed(4) + '.';
+    } else if (step.layer > 0) {
+        body = step.visitedOnly
+            ? 'Xét láng giềng node ' + step.nodeId + ' của điểm hiện tại (khoảng cách = ' + step.distance.toFixed(4) + ').'
+            : 'Node ' + step.nodeId + ' gần điểm truy vấn hơn hiện tại → <b>di chuyển tham lam (greedy)</b> đến đây.';
+    } else {
+        body = step.visitedOnly
+            ? 'Mở rộng xét node ' + step.nodeId + ' (khoảng cách = ' + step.distance.toFixed(4) + '), thêm vào tập ứng viên beam search.'
+            : 'Node ' + step.nodeId + ' được cập nhật vào danh sách ứng viên tốt nhất hiện tại.';
+    }
+    return prefix + badge + body;
+}
+
+function updateExplain() {
+    var box = document.getElementById('explainBox');
+    if (searchStepIndex < 0 || searchSteps.length === 0) {
+        box.innerHTML = 'Chưa có bước tìm kiếm nào. Hãy thêm vài điểm rồi bấm "Tìm kiếm" để xem HNSW hoạt động từng bước.';
+        return;
+    }
+    box.innerHTML = explainStep(searchSteps[searchStepIndex], searchStepIndex);
+}
+
+function updateStepCounter() {
+    document.getElementById('stepCounter').textContent =
+        searchSteps.length === 0 ? 'Bước -/-' : ('Bước ' + (searchStepIndex + 1) + '/' + searchSteps.length);
+}
+
+function stepTo(index) {
+    if (searchSteps.length === 0) {
+        return;
+    }
+    searchStepIndex = Math.max(0, Math.min(index, searchSteps.length - 1));
+    updateExplain();
+    updateStepCounter();
+    draw();
+}
+
+function stepBy(delta) {
+    if (searchSteps.length === 0) {
+        return;
+    }
+    stepTo(searchStepIndex + delta);
+    if (searchStepIndex === searchSteps.length - 1) {
+        stopPlay();
+    }
+}
+
+function togglePlay() {
+    if (playTimer) {
+        stopPlay();
+        return;
+    }
+    if (searchSteps.length === 0) {
+        return;
+    }
+    if (searchStepIndex >= searchSteps.length - 1) {
+        stepTo(0);
+    }
+    document.getElementById('playBtn').textContent = '⏸ Tạm dừng';
+    var speed = parseInt(document.getElementById('speedSelect').value, 10);
+    playTimer = setInterval(function () {
+        if (searchStepIndex >= searchSteps.length - 1) {
+            stopPlay();
+            return;
+        }
+        stepBy(1);
+    }, speed);
+}
+
+function stopPlay() {
+    if (playTimer) {
+        clearInterval(playTimer);
+        playTimer = null;
+    }
+    document.getElementById('playBtn').textContent = '▶ Phát';
+}
+
+document.getElementById('graphCanvas').addEventListener('click', onCanvasClick);
+
+resetIndex();
+</script>
+</body>
+</html>

@@ -56,6 +56,7 @@ public class HnswIndex {
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     private volatile Node entryPoint;
+    @Getter
     private volatile int maxLevel = -1;
     @Getter
     private volatile int vectorSize;
@@ -148,7 +149,8 @@ public class HnswIndex {
                     curr,
                     efConstruction,
                     lc,
-                    false
+                    false,
+                    null
                 );
                 int neighborLimit = lc == 0 ? maxM0 : maxM;
                 List<Candidate> selected = candidates.size() > neighborLimit
@@ -238,7 +240,8 @@ public class HnswIndex {
                 curr,
                 Math.max(ef, k),
                 0,
-                true
+                true,
+                null
             );
             List<SearchResult> results =
                 new ArrayList<>(Math.min(k, candidates.size()));
@@ -252,6 +255,112 @@ public class HnswIndex {
         } finally {
             lock.readLock().unlock();
         }
+    }
+
+    @SuppressWarnings("MethodLength")
+    public SearchTrace searchWithTrace(
+        float[] queryVector,
+        int k,
+        int ef
+    ) {
+        validateVector(queryVector);
+        List<SearchStep> steps = new ArrayList<>();
+        if (k <= 0) {
+            return new SearchTrace(steps, Collections.emptyList());
+        }
+        float[] normalized = normalize(queryVector);
+        lock.readLock().lock();
+        try {
+            validateSearchVectorSize(queryVector);
+            Node start = entryPoint == null || entryPoint.deleted
+                ? findActiveEntryPoint()
+                : entryPoint;
+            if (start == null) {
+                return new SearchTrace(steps, Collections.emptyList());
+            }
+            Node curr = start;
+            float currDist = distance(normalized, curr.vector);
+            steps.add(new SearchStep(maxLevel, curr.id, currDist, false));
+            for (int lc = maxLevel; lc > 0; --lc) {
+                boolean changed = true;
+                while (changed) {
+                    changed = false;
+                    for (long neighborId : curr.neighbors(lc)) {
+                        Node neighbor = nodesById.get(neighborId);
+                        if (neighbor == null) {
+                            continue;
+                        }
+                        float d = distance(normalized, neighbor.vector);
+                        steps.add(new SearchStep(lc, neighbor.id, d, true));
+                        if (d < currDist) {
+                            currDist = d;
+                            curr = neighbor;
+                            changed = true;
+                            steps.add(
+                                new SearchStep(lc, curr.id, currDist, false)
+                            );
+                        }
+                    }
+                }
+            }
+            List<Candidate> candidates = searchLayer(
+                normalized,
+                curr,
+                Math.max(ef, k),
+                0,
+                true,
+                steps
+            );
+            List<SearchResult> results =
+                new ArrayList<>(Math.min(k, candidates.size()));
+            for (int i = 0; i < candidates.size() && results.size() < k; ++i) {
+                Candidate c = candidates.get(i);
+                results.add(
+                    new SearchResult(c.id, 1f - c.dist)
+                );
+            }
+            return new SearchTrace(steps, results);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    public Long getEntryPointId() {
+        Node ep = entryPoint;
+        return ep == null ? null : ep.id;
+    }
+
+    public Set<Long> getNodeIds() {
+        lock.readLock().lock();
+        try {
+            Set<Long> ids = new HashSet<>();
+            for (Node node : nodesById.values()) {
+                if (!node.deleted) {
+                    ids.add(node.id);
+                }
+            }
+            return ids;
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    public int getNodeLevel(long id) {
+        Node node = nodesById.get(id);
+        return node == null ? -1 : node.level;
+    }
+
+    public List<Long> getNeighborIds(long id, int layer) {
+        Node node = nodesById.get(id);
+        if (node == null) {
+            return Collections.emptyList();
+        }
+        return new ArrayList<>(node.neighbors(layer));
+    }
+
+    public float[] getVector(long id) {
+        Node node = nodesById.get(id);
+        return node == null ? null : node.vector.clone();
     }
 
     public int size() {
@@ -437,7 +546,8 @@ public class HnswIndex {
         Node entry,
         int ef,
         int layer,
-        boolean excludeDeleted
+        boolean excludeDeleted,
+        List<SearchStep> trace
     ) {
         if (ef <= 0) {
             throw new IllegalArgumentException(
@@ -464,6 +574,11 @@ public class HnswIndex {
 
         while (!candidateQueue.isEmpty()) {
             Candidate current = candidateQueue.poll();
+            if (trace != null) {
+                trace.add(
+                    new SearchStep(layer, current.id, current.dist, true)
+                );
+            }
             if (!resultQueue.isEmpty()
                 && current.dist > resultQueue.peek().dist
                 && resultQueue.size() >= ef) {
@@ -659,6 +774,40 @@ public class HnswIndex {
         SearchResult(long id, float score) {
             this.id = id;
             this.score = score;
+        }
+    }
+
+    @Getter
+    public static final class SearchStep {
+        private final int layer;
+        private final long nodeId;
+        private final float distance;
+        private final boolean visitedOnly;
+
+        SearchStep(
+            int layer,
+            long nodeId,
+            float distance,
+            boolean visitedOnly
+        ) {
+            this.layer = layer;
+            this.nodeId = nodeId;
+            this.distance = distance;
+            this.visitedOnly = visitedOnly;
+        }
+    }
+
+    @Getter
+    public static final class SearchTrace {
+        private final List<SearchStep> steps;
+        private final List<SearchResult> results;
+
+        SearchTrace(
+            List<SearchStep> steps,
+            List<SearchResult> results
+        ) {
+            this.steps = steps;
+            this.results = results;
         }
     }
 }
