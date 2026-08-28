@@ -2,14 +2,14 @@
 
 Nếu anh em đang dùng Qdrant hay mấy cái vector DB có sẵn thì cũng không cần quan tâm bài này lắm. Nhưng không có lý do gì mà mình lại không tò mò xem Vector DB nó thật sự là cái gì, nó có phức tạp đến mức mình không thể làm chủ công nghệ này không. Trong bài này tôi sẽ đi từ ý tưởng cơ bản nhất, rồi soi vào cách `ezyvector` (project mình đang tự viết) hiện thực nó.
 
-# 1. Ý tưởng cốt lõi
+# Ý tưởng cốt lõi
 
 Cơ bản thì Vector Database là một dịch vụ hỗ trợ tìm kiếm, và kết quả của nó hiện tại có phần vượt trội hơn so với search theo keyword hay một số thuật toán mình hay dùng trong Elasticsearch.
 
 Ý tưởng rất đơn giản: thay vì ánh xạ **từ khoá → nội dung** như search truyền thống, nó ánh xạ **vector → mảnh nội dung**. Khi tìm kiếm, câu query sẽ được biến thành một vector, sau đó áp dụng một thuật toán nào đó tối ưu để tìm ra các vector tương đồng nhất, từ đó lấy được mảnh nội dung liên quan.
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph Keyword["Search theo keyword (kiểu Elasticsearch)"]
         direction LR
         Q1["từ khoá"] --> M1["so khớp text"] --> R1["nội dung"]
@@ -17,13 +17,15 @@ flowchart LR
 
     subgraph Vector["Search theo vector (VectorDB)"]
         direction LR
-        Q2["câu query"] --> E2["embedding model"] --> V2["vector"] --> M2["tìm vector\ntương đồng"] --> R2["nội dung liên quan"]
+        Q2["câu query"] --> E2["embedding model"] --> V2["vector"] --> M2["tìm vector tương đồng"] --> R2["nội dung liên quan"]
     end
+
+    R1 ~~~ Q2
 ```
 
 Điểm khác biệt lớn nhất: keyword search so khớp *chữ*, còn vector search so khớp *ý nghĩa* — vì embedding model được huấn luyện để những câu có nghĩa gần nhau thì có vector gần nhau trong không gian.
 
-# 2. Tại sao một mảng `float[]` lại gọi là "vector"?
+# Tại sao một mảng `float[]` lại gọi là "vector"?
 
 Sẽ có nhiều bạn thắc mắc: mình chỉ ánh xạ một mảng `float[]`, tức là toạ độ của **một điểm** trong không gian N chiều, vậy tại sao lại gọi nó là "vector" — trong khi vector về mặt hình học phải là đoạn nối **hai điểm**?
 
@@ -31,7 +33,7 @@ Câu trả lời: trong toán học, nếu ta cố định gốc toạ độ O(0
 
 ```mermaid
 flowchart LR
-    O(("Gốc toạ độ\n(0,0,...,0)")) -- "vector = float[]" --> P["Điểm P\n(toạ độ = embedding)"]
+    O(("Gốc toạ độ \n(0,0,...,0)")) -- "vector = float[]" --> P["Điểm P\n(toạ độ = embedding)"]
 ```
 
 Vì vậy trong cùng một mảng số, hai cách gọi tồn tại song song mà không mâu thuẫn:
@@ -39,7 +41,7 @@ Vì vậy trong cùng một mảng số, hai cách gọi tồn tại song song m
 - Gọi là **vector** khi nói về phép toán đại số (cosine similarity, dot product...) — đây là lý do có tên "vector DBMS".
 - Gọi là **point** khi nói về vị trí lưu trữ trong không gian — đây cũng là tên entity ở tầng lưu trữ/index (mỗi node trong đồ thị HNSW là một "điểm").
 
-# 3. Trong `ezyvector`, "chunk" chính là "point"
+# Trong `ezyvector`, "chunk" chính là "point"
 
 Một câu hỏi hay gặp khác: chunk (mảnh nội dung) được ánh xạ với vector hay với point?
 
@@ -68,7 +70,7 @@ flowchart LR
 
 Nói cách khác: `chunkId == pointId`. "Chunk" chỉ là tên gọi ở tầng business/API cho cùng một point, không phải một object trung gian riêng.
 
-# 4. Đo độ tương đồng: Cosine similarity
+# Đo độ tương đồng: Cosine similarity
 
 Cũng có nhiều thuật toán đo độ tương đồng giữa các vector, nhưng trong dự án này mình chọn **Cosine similarity** — một thuật toán tương đối đơn giản và quen thuộc: đo góc giữa hai vector, càng gần 0 độ (cos càng gần 1) thì càng tương đồng.
 
@@ -81,7 +83,7 @@ flowchart LR
 
 Bên trong HNSW, để tối thiểu hoá (thay vì tối đa hoá), người ta lưu `distance = 1 - cosine`, rồi khi trả kết quả lại đổi ngược `score = 1 - distance` để có cosine similarity gốc.
 
-# 5. HNSW — cấu trúc index để tìm nhanh trong hàng triệu vector
+# HNSW — cấu trúc index để tìm nhanh trong hàng triệu vector
 
 Nếu chỉ so sánh vector query với *toàn bộ* vector đã lưu (brute-force) thì với dữ liệu lớn sẽ rất chậm. `ezyvector` dùng **HNSW (Hierarchical Navigable Small World)** — một cấu trúc đồ thị đa tầng giúp tìm gần đúng (approximate nearest neighbor) rất nhanh.
 
@@ -107,11 +109,9 @@ flowchart TB
 
 Mỗi node trong đồ thị lưu: `id` (chính là `pointId`), `vector` đã normalize, `level` (tầng cao nhất mà node này xuất hiện — sinh ngẫu nhiên theo phân phối mũ, càng lên cao xác suất càng thấp), và danh sách neighbor ở từng tầng.
 
-**Insert một điểm mới**: đi từ entry point, ở các tầng cao thì "leo" greedy sang neighbor gần hơn cho tới tầng của node mới; từ tầng đó xuống tầng 0 thì tìm một số ứng viên gần nhất, nối 2 chiều với các neighbor tốt nhất (giới hạn số neighbor tối đa mỗi tầng), sau đó cắt bớt (prune) để đồ thị không phình quá to. Nếu tầng ngẫu nhiên của node mới cao hơn tầng cao nhất hiện tại, node đó trở thành entry point mới.
+Chi tiết về HNSW chúng ta hãy dành cho một bài viết khác nhé.
 
-**Search**: cũng đi từ entry point, greedy giảm dần qua các tầng cao (chỉ tìm 1 điểm "hạ cánh" tốt, chưa cần chính xác), đến tầng 0 mới mở rộng tìm kiếm với một tập ứng viên rộng hơn (`ef`) để lấy đúng top-k kết quả gần nhất.
-
-# 6. Luồng insert một chunk (end-to-end)
+# Luồng insert một chunk (end-to-end)
 
 ```mermaid
 sequenceDiagram
@@ -134,7 +134,7 @@ sequenceDiagram
     end
 ```
 
-# 7. Luồng search một câu query (end-to-end)
+# Luồng search một câu query (end-to-end)
 
 ```mermaid
 sequenceDiagram
@@ -159,7 +159,7 @@ sequenceDiagram
     S-->>C: [EzyVectorSearchResultModel{chunkId, score, payload}, ...]
 ```
 
-# 8. Nhược điểm của Vector DB
+# Nhược điểm của Vector DB
 
 Không có gì miễn phí, dùng Vector DB thì mình phải đánh đổi vài thứ:
 
@@ -171,7 +171,7 @@ Không có gì miễn phí, dùng Vector DB thì mình phải đánh đổi vài
 - **Phụ thuộc hoàn toàn vào chất lượng embedding model**: model kém hoặc không hợp domain thì search kém, mà đổi sang model khác (để nâng cấp chất lượng) thường phải re-embed lại toàn bộ dữ liệu cũ — chi phí migrate không nhỏ.
 - **Filter/kết hợp điều kiện phức tạp còn hạn chế**: so với SQL truyền thống, việc vừa lọc theo điều kiện chính xác (ví dụ theo ngày, theo trạng thái) vừa tìm tương đồng vector cùng lúc thường kém linh hoạt và kém tối ưu hơn.
 
-# 9. Tương lai của Vector DB sẽ đi về đâu?
+# Tương lai của Vector DB sẽ đi về đâu?
 
 Dù có những nhược điểm kể trên, khả năng tìm kiếm theo ngữ nghĩa của Vector DB là không phải bàn cãi — nó vượt trội hơn hẳn so với search truyền thống, mà nhu cầu tìm kiếm lại là tối quan trọng đối với hầu hết mọi hệ thống. Vậy nên mình nghĩ Vector DB sẽ dần trở nên phổ biến, trở thành một lựa chọn phổ thông không kém gì MySQL hay Elasticsearch bây giờ, và cũng là một dòng sản phẩm mới cho các đơn vị cung cấp hạ tầng.
 
@@ -182,7 +182,7 @@ Một vài hướng đi có thể thấy rõ:
 - **Tối ưu chi phí lưu trữ/RAM**: các kỹ thuật nén vector (quantization), giảm chiều mà vẫn giữ chất lượng tìm kiếm sẽ tiếp tục được cải tiến để giảm bớt cái giá phải trả ở mục nhược điểm.
 - **Đa phương thức (multi-modal)**: không chỉ text, mà ảnh, âm thanh, video cũng được embedding vào cùng một không gian vector để tìm kiếm chéo (ví dụ tìm ảnh bằng câu mô tả).
 
-# 10. Tổng kết
+# Tổng kết
 
 - VectorDB thay "so khớp chữ" bằng "so khớp ý nghĩa" thông qua embedding vector.
 - Một mảng `float[]` vừa là **toạ độ của một điểm**, vừa là **vector vị trí** tính từ gốc toạ độ — hai cách gọi cho cùng một dữ liệu.
