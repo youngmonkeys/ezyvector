@@ -46,6 +46,7 @@ public class HnswIndex {
     private static final int FILE_MAGIC = 0x455A4857;
     private static final int FILE_VERSION = 1;
     private static final int UNSPECIFIED_VECTOR_SIZE = -1;
+    private static final int IO_BUFFER_SIZE = 8 * 1024;
     public static final int DEFAULT_MAX_M = 16;
     public static final int DEFAULT_EF_CONSTRUCTION = 200;
 
@@ -382,7 +383,8 @@ public class HnswIndex {
             Path tempPath = path.resolveSibling(path.getFileName() + ".tmp");
             try (
                 OutputStream outputStream = new BufferedOutputStream(
-                    Files.newOutputStream(tempPath)
+                    Files.newOutputStream(tempPath),
+                    IO_BUFFER_SIZE
                 );
                 DataOutputStream output = new DataOutputStream(outputStream)
             ) {
@@ -420,7 +422,8 @@ public class HnswIndex {
     public static HnswIndex load(Path path) throws IOException {
         try (
             InputStream inputStream = new BufferedInputStream(
-                Files.newInputStream(path)
+                Files.newInputStream(path),
+                IO_BUFFER_SIZE
             );
             DataInputStream input = new DataInputStream(inputStream)
         ) {
