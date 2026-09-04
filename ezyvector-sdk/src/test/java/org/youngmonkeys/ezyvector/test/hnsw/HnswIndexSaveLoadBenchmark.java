@@ -70,7 +70,7 @@ public class HnswIndexSaveLoadBenchmark {
     }
 
     private static void warmUp(Path dir) throws IOException {
-        HnswIndex index = buildIndex(500, RANDOM_SEED);
+        HnswIndex index = buildIndex(500);
         Path before = dir.resolve("warmup-before.dat");
         Path after = dir.resolve("warmup-after.dat");
         saveUnbuffered(index, before);
@@ -93,7 +93,7 @@ public class HnswIndexSaveLoadBenchmark {
         Path dir,
         int nodeCount
     ) throws IOException {
-        HnswIndex index = buildIndex(nodeCount, RANDOM_SEED);
+        HnswIndex index = buildIndex(nodeCount);
         Path before = dir.resolve("save-before-" + nodeCount + ".dat");
         Path after = dir.resolve("save-after-" + nodeCount + ".dat");
 
@@ -116,7 +116,7 @@ public class HnswIndexSaveLoadBenchmark {
         Path dir,
         int nodeCount
     ) throws IOException {
-        HnswIndex index = buildIndex(nodeCount, RANDOM_SEED);
+        HnswIndex index = buildIndex(nodeCount);
         Path before = dir.resolve("load-before-" + nodeCount + ".dat");
         Path after = dir.resolve("load-after-" + nodeCount + ".dat");
         saveUnbuffered(index, before);
@@ -169,18 +169,18 @@ public class HnswIndexSaveLoadBenchmark {
         return String.format(Locale.ROOT, "%.2f MB", mb);
     }
 
-    private static HnswIndex buildIndex(int nodeCount, long seed) {
+    private static HnswIndex buildIndex(int nodeCount) {
         HnswIndex index = new HnswIndex();
-        Random random = new Random(seed);
+        Random random = new Random(HnswIndexSaveLoadBenchmark.RANDOM_SEED);
         for (long id = 0; id < nodeCount; ++id) {
-            index.insert(id, randomVector(random, VECTOR_DIMENSION));
+            index.insert(id, randomVector(random));
         }
         return index;
     }
 
-    private static float[] randomVector(Random random, int dimension) {
-        float[] vector = new float[dimension];
-        for (int i = 0; i < dimension; ++i) {
+    private static float[] randomVector(Random random) {
+        float[] vector = new float[HnswIndexSaveLoadBenchmark.VECTOR_DIMENSION];
+        for (int i = 0; i < HnswIndexSaveLoadBenchmark.VECTOR_DIMENSION; ++i) {
             vector[i] = random.nextFloat() * 2f - 1f;
         }
         return vector;
