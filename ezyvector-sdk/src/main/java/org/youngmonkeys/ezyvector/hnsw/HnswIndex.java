@@ -18,6 +18,8 @@ package org.youngmonkeys.ezyvector.hnsw;
 
 import lombok.Getter;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -44,6 +46,7 @@ public class HnswIndex {
     private static final int FILE_MAGIC = 0x455A4857;
     private static final int FILE_VERSION = 1;
     private static final int UNSPECIFIED_VECTOR_SIZE = -1;
+    private static final int IO_BUFFER_SIZE = 8 * 1024;
     public static final int DEFAULT_MAX_M = 16;
     public static final int DEFAULT_EF_CONSTRUCTION = 200;
 
@@ -379,7 +382,10 @@ public class HnswIndex {
             Files.createDirectories(path.getParent());
             Path tempPath = path.resolveSibling(path.getFileName() + ".tmp");
             try (
-                OutputStream outputStream = Files.newOutputStream(tempPath);
+                OutputStream outputStream = new BufferedOutputStream(
+                    Files.newOutputStream(tempPath),
+                    IO_BUFFER_SIZE
+                );
                 DataOutputStream output = new DataOutputStream(outputStream)
             ) {
                 output.writeInt(FILE_MAGIC);
@@ -415,7 +421,10 @@ public class HnswIndex {
 
     public static HnswIndex load(Path path) throws IOException {
         try (
-            InputStream inputStream = Files.newInputStream(path);
+            InputStream inputStream = new BufferedInputStream(
+                Files.newInputStream(path),
+                IO_BUFFER_SIZE
+            );
             DataInputStream input = new DataInputStream(inputStream)
         ) {
             if (input.readInt() != FILE_MAGIC) {
