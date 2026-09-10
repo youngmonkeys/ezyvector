@@ -18,6 +18,7 @@ package org.youngmonkeys.ezyvector.web.validator;
 
 import com.tvd12.ezyfox.bean.annotation.EzySingleton;
 import com.tvd12.ezyhttp.core.exception.HttpBadRequestException;
+import org.youngmonkeys.ezyvector.web.request.WebDeleteVectorPointsRequest;
 import org.youngmonkeys.ezyvector.web.request.WebUpsertVectorPointsRequest;
 
 import java.util.HashMap;
@@ -26,6 +27,26 @@ import java.util.Map;
 
 @EzySingleton
 public class WebEzyVectorPointsValidator {
+
+    public void validate(
+        WebDeleteVectorPointsRequest request
+    ) {
+        Map<String, String> errors = new HashMap<>();
+        List<Long> points = request.getPoints();
+        if (points == null || points.isEmpty()) {
+            errors.put("points", "required");
+        } else {
+            for (int i = 0; i < points.size(); ++i) {
+                Long pointId = points.get(i);
+                if (pointId == null || pointId <= 0L) {
+                    errors.put("points[" + i + "]", "invalid");
+                }
+            }
+        }
+        if (!errors.isEmpty()) {
+            throw new HttpBadRequestException(errors);
+        }
+    }
 
     public void validate(
         WebUpsertVectorPointsRequest request
