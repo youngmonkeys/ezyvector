@@ -38,6 +38,7 @@ import org.youngmonkeys.ezyvector.web.controller.service.WebEzyVectorPointsContr
 import org.youngmonkeys.ezyvector.web.controller.service.WebEzyVectorSearchControllerService;
 import org.youngmonkeys.ezyvector.web.converter.WebEzyVectorRequestToModelConverter;
 import org.youngmonkeys.ezyvector.web.request.WebCreateVectorCollectionRequest;
+import org.youngmonkeys.ezyvector.web.request.WebDeleteVectorPointsRequest;
 import org.youngmonkeys.ezyvector.web.request.WebEzyVectorSearchRequest;
 import org.youngmonkeys.ezyvector.web.request.WebUpsertVectorPointsRequest;
 import org.youngmonkeys.ezyvector.web.response.WebCreateVectorCollectionResponse;
@@ -100,6 +101,20 @@ public class WebApiEzyVectorCollectionController extends EzyLoggable {
         vectorCollectionValidator.validateAuthentication(arguments);
         vectorPointsValidator.validate(request);
         return vectorPointsControllerService.upsertPoints(
+            collectionName,
+            request
+        );
+    }
+
+    @DoPost("/{collectionName}/points/delete")
+    public WebUpsertVectorPointsResponse collectionNamePointsDeletePost(
+        RequestArguments arguments,
+        @PathVariable String collectionName,
+        @RequestBody WebDeleteVectorPointsRequest request
+    ) throws Exception {
+        vectorCollectionValidator.validateAuthentication(arguments);
+        vectorPointsValidator.validate(request);
+        return vectorPointsControllerService.deletePoints(
             collectionName,
             request
         );

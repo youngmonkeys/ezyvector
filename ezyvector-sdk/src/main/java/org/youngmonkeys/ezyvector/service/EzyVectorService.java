@@ -138,6 +138,38 @@ public class EzyVectorService extends EzyLoggable {
         startHnswBuildIfNecessary(collectionId, vectorSize);
     }
 
+    public void deletePoints(
+        String collectionName,
+        List<Long> pointIds
+    ) throws Exception {
+        EzyVectorCollectionVectorSizeResult collection =
+            getVectorSizeResultEntityByNameOrThrow(
+                collectionName
+            );
+        long collectionId = collection.getId();
+        synchronized (writeLock) {
+            List<EzyVectorCollectionPoint> points =
+                new ArrayList<>(pointIds.size());
+            List<Long> slotIds = new ArrayList<>(pointIds.size());
+            for (Long pointId : pointIds) {
+                EzyVectorCollectionPoint point = collectionPointRepository
+                    .findByCollectionIdAndPointId(
+                        collectionId,
+                        pointId
+                    );
+                if (point != null) {
+                    points.add(point);
+                    slotIds.add(point.getId());
+                }
+            }
+            newVectorFileStorage().deleteAll(collectionId, slotIds);
+            deleteFromHnswIndex(collectionId, points);
+            for (EzyVectorCollectionPoint point : points) {
+                collectionPointRepository.delete(point.getId());
+            }
+        }
+    }
+
     public List<EzyVectorSearchResultModel> search(
         String collectionName,
         float[] vector,
@@ -463,6 +495,24 @@ public class EzyVectorService extends EzyLoggable {
             index
                 .save(newVectorFileStorage()
                 .getHnswPath(collectionId));
+        }
+    }
+
+    private void deleteFromHnswIndex(
+        long collectionId,
+        List<EzyVectorCollectionPoint> points
+    ) throws Exception {
+        HnswIndex index = hnswIndexByCollectionId.get(collectionId);
+        if (index == null) {
+            return;
+        }
+        for (EzyVectorCollectionPoint point : points) {
+            index.remove(point.getPointId());
+        }
+        if (readyHnswCollectionIds.contains(collectionId)) {
+            index.save(
+                newVectorFileStorage().getHnswPath(collectionId)
+            );
         }
     }
 

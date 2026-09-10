@@ -20,6 +20,7 @@ import com.tvd12.ezyhttp.server.core.annotation.Service;
 import lombok.AllArgsConstructor;
 import org.youngmonkeys.ezyvector.web.controller.decorator.WebEzyVectorPointsModelDecorator;
 import org.youngmonkeys.ezyvector.web.converter.WebEzyVectorRequestToModelConverter;
+import org.youngmonkeys.ezyvector.web.request.WebDeleteVectorPointsRequest;
 import org.youngmonkeys.ezyvector.web.request.WebUpsertVectorPointsRequest;
 import org.youngmonkeys.ezyvector.web.response.WebUpsertVectorPointsResponse;
 import org.youngmonkeys.ezyvector.web.service.WebEzyVectorService;
@@ -39,6 +40,18 @@ public class WebEzyVectorPointsControllerService {
         vectorService.upsert(
             collectionName,
             vectorRequestToModelConverter.toSaveVectorPointModels(request)
+        );
+        return vectorPointsModelDecorator
+            .decorateToUpsertVectorPointsResponse();
+    }
+
+    public WebUpsertVectorPointsResponse deletePoints(
+        String collectionName,
+        WebDeleteVectorPointsRequest request
+    ) throws Exception {
+        vectorService.deletePoints(
+            collectionName,
+            request.getPoints()
         );
         return vectorPointsModelDecorator
             .decorateToUpsertVectorPointsResponse();
