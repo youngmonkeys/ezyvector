@@ -99,6 +99,37 @@ public class EzyVectorFileStorage {
         }
     }
 
+    public void deleteAll(
+        long collectionId,
+        List<Long> slotIds
+    ) throws IOException {
+        if (slotIds.isEmpty()) {
+            return;
+        }
+        Path pointIdsFile = getSegmentDir(collectionId)
+            .resolve(POINT_IDS_FILE);
+        if (!Files.isRegularFile(pointIdsFile)) {
+            return;
+        }
+        try (
+            FileChannel pointIdChannel = FileChannel.open(
+                pointIdsFile,
+                StandardOpenOption.WRITE
+            )
+        ) {
+            for (Long slotId : slotIds) {
+                validateSlotId(slotId);
+                long pointIdOffset = (slotId - 1L) * Long.BYTES;
+                writeFully(
+                    pointIdChannel,
+                    toLongBuffer(0L),
+                    pointIdOffset
+                );
+            }
+            pointIdChannel.force(true);
+        }
+    }
+
     public List<SearchResult> search(
         long collectionId,
         long vectorSize,
